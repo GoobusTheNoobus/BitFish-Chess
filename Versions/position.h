@@ -29,6 +29,7 @@ struct Position
     // idk i thnk this is what you do
     void set_start_pos();
     void update_occupancies();
+    void set_square();
     void parse_fen(const std::string& fen);
     Bitboard get_bitboard (Piece piece) const;
     
