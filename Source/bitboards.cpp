@@ -1,4 +1,5 @@
 #include "bitboards.h"
+#include "type.h"
 #include <array>
 
 namespace {
@@ -17,25 +18,63 @@ namespace Bitboards {
     std::array<std::array<Bitboard, ROOK_BLOCKER_COMBINATIONS>, BOARD_SIZE> rook_table;
     
     static void precomputeLeapers () {
-        std::array<int, 8> knight_f = {
-            1, 1, 2, 2, -1, -1, -2, -2
-        };
+        std::array<std::array<int, 2>, 8> knight_vectors = {{
+            {1, 2},
+            {1, -2},
+            {-1, 2},
+            {-1, -2},
+            {2, 1},
+            {2, -1},
+            {-2, 1},
+            {-2, -1}
+        }};
 
-        std::array<int, 8> knight_r = {
-            2, -2, 1, -1, 2, -2, 1, -1
-        };
+        std::array<std::array<int, 2>, 8> king_vectors = {{
+            {1, 0},
+            {1, 1},
+            {1, -1},
+            {0, 1},
+            {0, -1},
+            {-1, 1},
+            {-1, 0},
+            {-1, -1}
+        }};
 
-        std::array<int, 8> king_f = {
-            1, 1, 1, 0, 0, -1, -1, -1
-        };
+        std::array<std::array<int, 2>, 8> white_pawn_vectors = {{
+            {1, 1},
+            {1, -1}
+        }};
 
-        std::array<int, 8> king_r = {
-            1, 0, -1, 1, -1, 1, 0, -1
-        };
+        std::array<std::array<int, 2>, 8> black_pawn_vectors = {{
+            {-1, 1},
+            {-1, -1}
+        }};
 
-        
+        for (int square = 0; square < 64; square++) {
+            // Initialize
+            int r;
+            int f;
 
-        // Knight in shining armor
+            Bitboard mask = 0ULL;
+
+            // Knight
+            for (std::array<int, 2> knight_vector: knight_vectors) {
+                r = square >> 3 + knight_vector[0];
+                f = square & 7 + knight_vector[1];
+
+                // Bound Check
+                if (r < 0 || r > 7 || f < 0 || f > 7) {
+                    continue;
+                }
+
+                mask |= 1ULL << parse_square(r, f);
+
+            }
+
+            knight_table[square] = mask;
+
+            mask = 0ULL;
+        }
 
     }
     
