@@ -36,4 +36,21 @@ enum Square : uint8_t{
     A6, B6, C6, D6, E6, F6, G6, H6,
     A7, B7, C7, D7, E7, F7, G7, H7,
     A8, B8, C8, D8, E8, F8, G8, H8,
+    NO_SQUARE
 };
+
+inline Square to_square (int squareInt) {
+    return Square (squareInt);
+}
+
+inline Square parse_square (int rank, int file) {
+    return to_square (rank << 3 | file);
+}
+
+inline int parse_file (Square square) {
+    return square & 7;
+}
+
+inline int parse_rank (Square square) {
+    return square >> 3;
+}

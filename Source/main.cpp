@@ -1,11 +1,12 @@
 #include <iostream>
 
 #include "bitboards.h"
+#include "position.h"
 
 int main () {
-    Bitboards::init();
+    Position pos;
 
-    std::cout << "Hello World\n";
+    std::cout << pos.to_string();
 
     return 0;
 }
