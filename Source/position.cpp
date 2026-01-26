@@ -8,6 +8,8 @@
 #include <cctype>
 #include <stdexcept>
 
+
+// lookups
 Bitboard Position::get_bitboard(Piece piece) const {
     return board.piece_bitboards[piece];
 }
@@ -16,28 +18,30 @@ Piece Position::piece_at(Square square) const {
     return board.mailbox[square];
 }
 
+// position representation
 std::string Position::to_string() const {
     std::ostringstream string;
 
-    for (int rank = 7; rank >= 0; --rank) {
-        // Rank Coordinates
-        string << (rank + 1) << ' ';
-
-        for (int file = 0; file < 8; ++file) {
-            Square square = Square(rank << 3 | file);
-            string << PIECE_TO_CHAR[piece_at(square)] << ' ';
+    
+        string << "\n  +-----------------+\n";
+        for (int rank = 7; rank >= 0; rank--) {
+            string << rank + 1 << " | ";
+            for (int file = 0; file < 8; file++) {
+                int square = rank * 8 + file;
+                string << PIECE_TO_CHAR[piece_at(Square(rank << 3 | file))] << " ";
+            }
+            string << "|\n";
         }
+        string << "  +-----------------+\n";
+        string << "    a b c d e f g h\n\n";
 
-        string << '\n';
-    }
-
-    string << "  a b c d e f g h";
 
     string << "\nSide to move: " << (game_info.side_to_move == WHITE ? "White": "Black");
 
     return string.str();
 }
 
+// editing function
 void Position::update_occupancies() {
     board.color_bitboards[WHITE] = get_bitboard(W_PAWN) | get_bitboard(W_KNIGHT) | get_bitboard(W_BISHOP) | get_bitboard(W_ROOK) | get_bitboard(W_QUEEN) | get_bitboard(W_KING);
     board.color_bitboards[BLACK] = get_bitboard(B_PAWN) | get_bitboard(B_KNIGHT) | get_bitboard(B_BISHOP) | get_bitboard(B_ROOK) | get_bitboard(B_QUEEN) | get_bitboard(B_KING);
@@ -167,6 +171,48 @@ void Position::parse_fen(std::string_view fen) {
     fen.remove_prefix(space + 1);
 
     
-
     update_occupancies();
+}
+
+bool Position::is_square_attacked (Square square, Color color) const {
+    Bitboard pawns = color == WHITE ? get_bitboard(W_PAWN): get_bitboard(B_PAWN);
+    Bitboard knights = color == WHITE ? get_bitboard(W_KNIGHT): get_bitboard(B_KNIGHT);
+    Bitboard bishops = color == WHITE ? get_bitboard(W_BISHOP): get_bitboard(B_BISHOP);
+    Bitboard rooks = color == WHITE ? get_bitboard(W_ROOK): get_bitboard(B_ROOK);
+    Bitboard queens = color == WHITE ? get_bitboard(W_QUEEN): get_bitboard(B_QUEEN);
+    Bitboard kings = color == WHITE ? get_bitboard(W_KING): get_bitboard(B_KING);
+
+    // pawns first
+    if ((Bitboards::get_pawn_attacks(square, opposite(color)) & pawns) != 0ULL) 
+        return true;
+        // if color == WHITE, the black pawn attack of that square is the square(s) that if a white pawn stands on would attack that square. 
+    
+    // knights
+    if ((Bitboards::get_knight_attacks(square) & knights) != 0ULL)
+        return true;
+
+    Bitboard rook_attacks = Bitboards::get_rook_attacks(square, board.occupancy);
+    Bitboard bishop_attacks = Bitboards::get_bishop_attacks(square, board.occupancy);
+
+    // rooks & queens
+    if (((rook_attacks & rooks) != 0ULL) || ((rook_attacks & queens) != 0ULL)) 
+        return true;
+
+    // bishops & queens
+    if (((bishop_attacks & bishops) != 0ULL) || ((bishop_attacks & queens) != 0ULL))
+        return true;
+
+    // kings
+    if ((Bitboards::get_king_attacks(square) & kings) != 0ULL)
+        return true;
+
+    
+    return false;
+
+    
+}
+
+bool Position::is_in_check () const {
+    int king_pos = __builtin_ctzll (game_info.side_to_move == WHITE ? get_bitboard(W_KING): get_bitboard(B_KING));
+    return is_square_attacked(Square(king_pos), opposite(game_info.side_to_move));
 }

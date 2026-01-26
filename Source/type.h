@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <iostream>
 
 using Bitboard = uint64_t;
 using CastlingRights = uint8_t;
@@ -53,4 +54,18 @@ inline int parse_file (Square square) {
 
 inline int parse_rank (Square square) {
     return square >> 3;
+}
+
+inline Color opposite (Color c) {
+    switch (c) {
+        case WHITE:
+            return BLACK;
+        
+        case BLACK:
+            return WHITE;
+        
+        default:
+            std::cout << "tf???";
+            throw std::invalid_argument("very nice color you got there bro :cry:");
+    }
 }
