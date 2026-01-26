@@ -8,8 +8,7 @@
 #include "type.h"
 #include "constants.h"
 
-struct Board 
-{
+struct Board {
     std::array <Bitboard, PIECE_NUM> piece_bitboards;
     std::array <Piece, BOARD_SIZE> mailbox;
     std::array <Bitboard, COLOR_NUM> color_bitboards;
@@ -17,8 +16,7 @@ struct Board
     Bitboard occupancy;
 };
 
-struct GameInfo
-{
+struct GameInfo {
     Color side_to_move;
     CastlingRights castling;
     Square ep_square;
@@ -26,15 +24,13 @@ struct GameInfo
     int rule_50_clock;
 };
 
-struct Position
-{
+struct Position {
 
-    // Stuff
+    // board and gameinfo
     Board board;
-
     GameInfo game_info;
 
-    // Constructors, parses FEN, or else sets the starting position
+    // constructors, parses FEN, or else sets the starting position
     Position() {
         set_start_pos();
     }
@@ -43,24 +39,24 @@ struct Position
         parse_fen(fen);
     }
 
-    // Getting Functions
+    // lookups
     Bitboard get_bitboard (Piece piece) const;
     Piece piece_at (Square square) const;
 
-    // To String
+    // printing
     std::string to_string() const;
 
-    // Basic Editing Functions
+    // editing functions
     void update_occupancies();
     void set_square(Square square, Piece piece);
     void clear_square (Square square);
     void clear_board();
 
-    // More specific functions
     void set_start_pos();
     void parse_fen(const std::string_view fen);
     
-    
+    bool is_square_attacked (Square square, Color color) const;
+    bool is_in_check () const;
 };
 
 
