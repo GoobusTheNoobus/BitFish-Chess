@@ -26,3 +26,11 @@ const std::array<char, PIECE_NUM + 1> PIECE_TO_CHAR = {
     'k',
     '.'
 };
+
+constexpr int MOVE_CASTLING_FLAG = 0b0001;
+constexpr int MOVE_ENPASSANT_FLAG = 0b0010;
+constexpr int MOVE_DOUBLE_PUSH_FLAG = 0b0011;
+constexpr int MOVE_NPROMO_FLAG = 0b0100;
+constexpr int MOVE_BPROMO_FLAG = 0b0101;
+constexpr int MOVE_RPROMO_FLAG = 0b0110;
+constexpr int MOVE_QPROMO_FLAG = 0b0111;

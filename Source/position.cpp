@@ -124,7 +124,7 @@ void Position::parse_fen(std::string_view fen) {
                 default: throw std::invalid_argument("Invalid Piece in Board field");
             }
 
-            Square sq = parse_square(rank, file);
+            Square sq = Square(rank << 3 | file);
             set_square(sq, p);
             ++file;
         }
@@ -161,7 +161,7 @@ void Position::parse_fen(std::string_view fen) {
     } else {
         char file_char = fen[0];
         char rank_char = fen[1];
-        game_info.ep_square = parse_square((rank_char - '1'), (file_char - 'a'));
+        game_info.ep_square = Square((rank_char - '1') << 3 | (file_char - 'a'));
         fen.remove_prefix(3);
     }
 
@@ -215,4 +215,10 @@ bool Position::is_square_attacked (Square square, Color color) const {
 bool Position::is_in_check () const {
     int king_pos = __builtin_ctzll (game_info.side_to_move == WHITE ? get_bitboard(W_KING): get_bitboard(B_KING));
     return is_square_attacked(Square(king_pos), opposite(game_info.side_to_move));
+}
+
+bool Position::can_castle_ks () const {
+    if (is_in_check()) return false;
+
+    
 }

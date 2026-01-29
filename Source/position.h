@@ -21,7 +21,7 @@ struct GameInfo {
     CastlingRights castling;
     Square ep_square;
 
-    int rule_50_clock;
+    uint8_t rule_50_clock;
 };
 
 struct Position {
@@ -57,6 +57,8 @@ struct Position {
     
     bool is_square_attacked (Square square, Color color) const;
     bool is_in_check () const;
+    bool can_castle_ks () const;
+    bool can_castle_qs () const;
 };
 
 

@@ -4,6 +4,9 @@
 #include <array>
 #include <iostream>
 #include <vector>
+#include <ostream>
+#include <string>
+#include <sstream>
 
 namespace Bitboards {
     // precomputed attack tables at runtime
@@ -25,19 +28,23 @@ namespace Bitboards {
         return rook_table[square][Sliders::hash_rook(square, occupancy)];
     }
 
-    // pretty print a bitboard
-    void pretty_print(Bitboard bb) {
-        std::cout << "\n  +-----------------+\n";
+    // pretty a bitboard
+    std::string to_string(Bitboard bb) {
+        std::ostringstream string;
+
+        string << "\n  +-----------------+\n";
         for (int rank = 7; rank >= 0; rank--) {
-            std::cout << rank + 1 << " | ";
+            string << rank + 1 << " | ";
             for (int file = 0; file < 8; file++) {
                 int square = rank * 8 + file;
-                std::cout << (((bb >> square) & 1ULL) ? "O " : ". ");
+                string << (((bb >> square) & 1ULL) ? "O " : ". ");
             }
-            std::cout << "|\n";
+            string << "|\n";
         }
-        std::cout << "  +-----------------+\n";
-        std::cout << "    a b c d e f g h\n\n";
+        string << "  +-----------------+\n";
+        string << "    a b c d e f g h\n\n";
+
+        return string.str();
     }
 
     // initialize
@@ -120,7 +127,7 @@ namespace Leapers{
                    continue;
             }
 
-            mask |= 1ULL << parse_square(r, f);
+            mask |= 1ULL << (r << 3 | f);
 
         }
 
@@ -142,7 +149,7 @@ namespace Leapers{
                 continue;
             }
 
-            mask |= 1ULL << parse_square(r, f);
+            mask |= 1ULL << (r << 3 | f);
 
         }
 
@@ -169,7 +176,7 @@ namespace Leapers{
                 continue;
             }
 
-            mask |= 1ULL << parse_square(r, f);
+            mask |= 1ULL << (r << 3 | f);
 
         }
 
@@ -195,7 +202,7 @@ namespace Leapers{
                 continue;
             }
 
-            mask |= 1ULL << parse_square(r, f);
+            mask |= 1ULL << (r << 3 | f);
 
         }
 

@@ -4,6 +4,7 @@
 
 using Bitboard = uint64_t;
 using CastlingRights = uint8_t;
+using Move = uint64_t;
 
 enum Color : uint8_t {
     WHITE,
@@ -44,16 +45,11 @@ inline Square to_square (int squareInt) {
     return Square (squareInt);
 }
 
-inline Square parse_square (int rank, int file) {
-    return to_square (rank << 3 | file);
-}
+inline std::string square_to_str (Square square) {
+    char file = 'a' + (square & 7);
+    char rank = '1' + (square >> 3);
 
-inline int parse_file (Square square) {
-    return square & 7;
-}
-
-inline int parse_rank (Square square) {
-    return square >> 3;
+    return {file, rank};
 }
 
 inline Color opposite (Color c) {
