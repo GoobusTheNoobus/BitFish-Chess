@@ -4,7 +4,10 @@
 
 using Bitboard = uint64_t;
 using CastlingRights = uint8_t;
-using Move = uint64_t;
+using Move = uint32_t;
+using Key = uint64_t;
+using PackedGI = uint32_t;
+
 
 enum Color : uint8_t {
     WHITE,
@@ -27,6 +30,15 @@ enum Piece : uint8_t {
     B_KING,
 
     NO_PIECE
+};
+
+enum PieceType : uint8_t {
+    PAWN,
+    KNIGHT,
+    BISHOP,
+    ROOK,
+    QUEEN,
+    KING
 };
 
 enum Square : uint8_t{
@@ -65,3 +77,13 @@ inline Color opposite (Color c) {
             throw std::invalid_argument("very nice color you got there bro :cry:");
     }
 }
+
+inline Piece make_piece (PieceType pt, Color c) {
+    return Piece(pt + c * 6);
+}
+
+inline PieceType type_of (Piece p) {
+    return PieceType(p % 6);
+}
+
+

@@ -1,8 +1,3 @@
-#pragma once
-
-#include <array>
-#include "constants.h"
-#include "type.h"
 
 #pragma once
 

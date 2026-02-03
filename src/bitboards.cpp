@@ -9,6 +9,9 @@
 #include <sstream>
 
 namespace Bitboards {
+
+    std::array<Bitboard, BOARD_SIZE> square_bb;
+
     // precomputed attack tables at runtime
     std::array<Bitboard, BOARD_SIZE> knight_table;
     std::array<Bitboard, BOARD_SIZE> king_table;
@@ -29,7 +32,7 @@ namespace Bitboards {
     }
 
     // pretty a bitboard
-    std::string to_string(Bitboard bb) {
+    std::string to_string (Bitboard bitboard) {
         std::ostringstream string;
 
         string << "\n  +-----------------+\n";
@@ -37,7 +40,7 @@ namespace Bitboards {
             string << rank + 1 << " | ";
             for (int file = 0; file < 8; file++) {
                 int square = rank * 8 + file;
-                string << (((bb >> square) & 1ULL) ? "O " : ". ");
+                string << (((bitboard >> square) & 1ULL) ? "O " : ". ");
             }
             string << "|\n";
         }
@@ -62,6 +65,8 @@ namespace Bitboards {
 
             Sliders::pc_bishop_attacks(sqEnum);
             Sliders::pc_rook_attacks(sqEnum);
+
+            square_bb[square] = 1ULL << square;
             
         }
 
@@ -447,5 +452,4 @@ namespace Sliders {
 
 
 }
-
 

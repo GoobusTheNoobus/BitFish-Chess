@@ -44,6 +44,21 @@ namespace Sliders {
 
 namespace Bitboards {
 
+    constexpr Bitboard rank1 = 0xFF;
+    constexpr Bitboard rank2 = rank1 << 8;
+    constexpr Bitboard rank3 = rank2 << 8;
+    constexpr Bitboard rank4 = rank3 << 8;
+    constexpr Bitboard rank5 = rank4 << 8;
+    constexpr Bitboard rank6 = rank5 << 8;
+    constexpr Bitboard rank7 = rank6 << 8;
+    constexpr Bitboard rank8 = rank7 << 8;
+
+    constexpr Bitboard file_a = 0x0101010101010101ULL;
+    constexpr Bitboard file_h = 0x8080808080808080ULL;
+    
+
+    extern std::array<Bitboard, BOARD_SIZE> square_bb;
+
     // precomputed leaper tables
     extern std::array<Bitboard, BOARD_SIZE> knight_table;
     extern std::array<Bitboard, BOARD_SIZE> king_table;
@@ -74,7 +89,8 @@ namespace Bitboards {
     void init();
 
     // utility
-    void pretty_print (Bitboard bitboard);
+    std::string to_string (Bitboard bitboard);
     
 }
+
 

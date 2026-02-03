@@ -2,6 +2,8 @@
 #include <string_view>
 #include <array>
 
+#include "type.h"
+
 constexpr int BOARD_SIZE = 64;
 constexpr int PIECE_NUM  = 12;
 constexpr int COLOR_NUM = 2;
@@ -34,3 +36,20 @@ constexpr int MOVE_NPROMO_FLAG = 0b0100;
 constexpr int MOVE_BPROMO_FLAG = 0b0101;
 constexpr int MOVE_RPROMO_FLAG = 0b0110;
 constexpr int MOVE_QPROMO_FLAG = 0b0111;
+
+constexpr uint8_t WKS_RIGHT = 0b0001;
+constexpr uint8_t WQS_RIGHT = 0b0010;
+constexpr uint8_t BKS_RIGHT = 0b0100;
+constexpr uint8_t BQS_RIGHT = 0b1000;
+
+constexpr Bitboard WKS_CASTLE_BETWEEN_SQU = (1ULL << F1) | (1ULL << G1);
+constexpr Bitboard WQS_CASTLE_BETWEEN_SQU = (1ULL << D1) | (1ULL << C1) | (1ULL << B1);
+
+constexpr Bitboard BKS_CASTLE_BETWEEN_SQU = (1ULL << F8) | (1ULL << G8);
+constexpr Bitboard BQS_CASTLE_BETWEEN_SQU = (1ULL << D8) | (1ULL << C8) | (1ULL << B8);
+
+constexpr int MATE_EVAL = 30000;
+constexpr int INF = 30001;
+constexpr int MAX_CP = 10000;
+
+
