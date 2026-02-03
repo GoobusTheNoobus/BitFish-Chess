@@ -87,3 +87,4 @@ inline PieceType type_of (Piece p) {
 }
 
 
+

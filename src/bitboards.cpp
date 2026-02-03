@@ -4,9 +4,6 @@
 #include <array>
 #include <iostream>
 #include <vector>
-#include <ostream>
-#include <string>
-#include <sstream>
 
 namespace Bitboards {
 
@@ -449,6 +446,36 @@ namespace Sliders {
 
 
     
+
+    
+
+    void pc_bishop_attacks (Square square) {
+        for (int i = 0; i < (1 << bishop_relevancy[square]); i++) {
+            Bitboard blockers = index_to_blocker(i, bishop_masks[square]);
+
+            Bitboard attacks = raycast_bishop(square, blockers);
+
+            Bitboards::bishop_table[square][hash_bishop(square, blockers)] = attacks;
+        }
+    }
+
+    
+
+    void pc_rook_attacks (Square square) {
+        for (int i = 0; i < (1 << rook_relevancy[square]); i++) {
+            Bitboard blockers = index_to_blocker(i, rook_masks[square]);
+
+            Bitboard attacks = raycast_rook(square, blockers);
+
+            Bitboards::rook_table[square][hash_rook(square, blockers)] = attacks;
+        }
+    }
+
+
+    
+
+
+}
 
 
 }
