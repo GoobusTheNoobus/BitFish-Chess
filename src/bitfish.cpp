@@ -3,8 +3,14 @@
 
 
 namespace BitFish {
+    int current_depth = 0;
+    bool stop_flag = false;
+    uint64_t start_time = 0ULL;
+    uint64_t end_time;
+    int max_time;
+    uint64_t nodes;
 
-    float Eval::eg_weight (Position& pos) {
+    float eg_weight (Position& pos) {
         int phase = 
             __builtin_popcountll(pos.get_bitboard(W_KNIGHT) | pos.get_bitboard(B_KNIGHT)) +
             __builtin_popcountll(pos.get_bitboard(W_BISHOP) | pos.get_bitboard(B_BISHOP)) +
@@ -16,7 +22,7 @@ namespace BitFish {
         return 1 - std::min (1.0f, static_cast<float> (phase) / max_phase);
     }
 
-    int Eval::evaluate (Position& pos) {
+    int evaluate (Position& pos) {
         float endgame = eg_weight(pos);
 
         int score = 0;
@@ -76,12 +82,58 @@ namespace BitFish {
         return score;
     }
 
+    int qsearch (Position& pos, int depth, int alpha, int beta) {
+        int stand_pat = evaluate (pos);
+
+        if (depth == 0) {
+            nodes ++;
+            return stand_pat;
+        }
+
+        if (stand_pat >= beta) return beta;
+
+        alpha = std::max (alpha, stand_pat);
+
+        MoveList moves = MoveGen::generate_moves (pos);
+
+        Color side_moving = pos.game_info.side_to_move;
+
+        for (int i = 0; i < moves.size; ++i) {
+            Move move = moves[i];
+
+            bool is_noisy = (CAPTURED(move) != NO_PIECE) || (FLAG(move) >= MOVE_NPROMO_FLAG);
+
+            if (!is_noisy) continue;
+
+            pos.make_move(move);
+
+            if (pos.is_in_check(side_moving)) {
+                pos.undo_move();
+                continue;
+            }
+
+            nodes++;
+
+            int score = -qsearch(pos, depth - 1, -beta, -alpha);
+
+            pos.undo_move();
+
+            if (score >= beta) {
+                return beta;
+            }
+
+            alpha = std::max(alpha, score);
+        }
+
+        return alpha;
+    }
+
     // no qsearch yet. keyword yet
-    int Searcher::minimax (Position& pos, int depth, int alpha, int beta) {
+    int minimax (Position& pos, int depth, int alpha, int beta) {
 
         if (depth <= 0) {
             nodes++;
-            return Eval::evaluate(pos);
+            return qsearch(pos, MAX_QDEPTH, alpha, beta);
         }
 
         MoveList moves = MoveGen::generate_moves(pos);
@@ -134,7 +186,7 @@ namespace BitFish {
         return best_score;
     }
 
-    std::pair<Move, int> Searcher::get_best_move(Position& pos, int depth) {
+    std::pair<Move, int> get_best_move(Position& pos, int depth) {
         
 
         Move best_move = -1;
@@ -168,7 +220,7 @@ namespace BitFish {
 
         }
 
-        std::cout << "Nodes: " << nodes;
+        std::cout << "Nodes: " << nodes << "\n";
 
         return {best_move, best_score};
 
