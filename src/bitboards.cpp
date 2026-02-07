@@ -23,7 +23,6 @@ namespace Bitboards {
     
     // lookup functions
     Bitboard get_bishop_attacks (Square square, Bitboard occupancy) {
-        
         return bishop_table[square][Sliders::hash_bishop(square, occupancy)];
     }
 

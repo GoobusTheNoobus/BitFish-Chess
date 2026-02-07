@@ -10,7 +10,7 @@ namespace BitFish {
     steady_clock::time_point start_time;
     int max_time;
     uint64_t nodes;
-    Position current_pos;
+    Position current_pos(STARTING_POS_FEN);
 
     std::array<std::array<Move, 2>, MAX_DEPTH> killers;
 

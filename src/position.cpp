@@ -91,24 +91,27 @@ void Position::clear_board () {
 
 void Position::set_start_pos () {
     
-    parse_fen(STARTING_POS_FEN);
+    parse_fen();
     
 }
 
 void Position::parse_fen(std::string_view fen) {
+    
     clear_board(); // start from empty board
 
     int rank = 7;
     int file = 0;
 
     size_t i = 0;
+    
+    
     while (i < fen.size() && fen[i] != ' ') {
         char c = fen[i];
 
         if (c == '/') {         // move to next rank
             assert(file == 8);  // sanity check
             file = 0;
-            --rank;
+            rank--;
         }
         else if (std::isdigit(c)) {  // empty squares
             file += c - '0';
@@ -137,14 +140,16 @@ void Position::parse_fen(std::string_view fen) {
 
             Square sq = Square(rank << 3 | file);
             set_square(sq, p);
-            ++file;
+            file++;
         }
-        ++i;
+        i++;
     }
+    std::cout << rank << " \n";
+    std::cout << file << " \n";
 
     assert(rank == 0 && file == 8); // sanity check all squares processed
 
-    // --- Parse remaining fields ---
+    // parse remaining fields
     fen.remove_prefix(i + 1); 
 
     

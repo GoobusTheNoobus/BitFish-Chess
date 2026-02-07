@@ -91,7 +91,7 @@ struct Position {
     void clear_board();
 
     void set_start_pos();
-    void parse_fen(const std::string_view fen);
+    void parse_fen(const std::string_view fen = STARTING_POS_FEN);
     
     bool is_square_attacked (Square square, Color color) const;
     bool is_in_check (Color color) const;
