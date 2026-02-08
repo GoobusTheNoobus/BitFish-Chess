@@ -30,7 +30,7 @@ namespace Bitboards {
         return rook_table[square][Sliders::hash_rook(square, occupancy)];
     }
 
-    // pretty a bitboard
+    // represent a bitboard
     std::string to_string (Bitboard bitboard) {
         std::ostringstream string;
 
@@ -52,18 +52,18 @@ namespace Bitboards {
     // initialize
     void init () {
         for (int square = 0; square < BOARD_SIZE; square++) {
-            Square sqEnum = Square(square);
+            Square square_enum = Square(square);
 
-            Leapers::pc_knight_attacks(sqEnum);
-            Leapers::pc_king_attacks(sqEnum);
-            Leapers::pc_white_pawn_attacks(sqEnum);
-            Leapers::pc_black_pawn_attacks(sqEnum);
+            Leapers::pc_knight_attacks(square_enum);
+            Leapers::pc_king_attacks(square_enum);
+            Leapers::pc_white_pawn_attacks(square_enum);
+            Leapers::pc_black_pawn_attacks(square_enum);
 
-            Sliders::generate_bishop_mask(sqEnum);
-            Sliders::generate_rook_mask(sqEnum);
+            Sliders::generate_bishop_mask(square_enum);
+            Sliders::generate_rook_mask(square_enum);
 
-            Sliders::pc_bishop_attacks(sqEnum);
-            Sliders::pc_rook_attacks(sqEnum);
+            Sliders::pc_bishop_attacks(square_enum);
+            Sliders::pc_rook_attacks(square_enum);
 
             square_bb[square] = 1ULL << square;
             

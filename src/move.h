@@ -99,44 +99,37 @@ struct MoveList {
         return list[index];
     }
 
-    // pv sort with mvv - lva
-    inline void sort (Move move, Move killer1 = NO_MOVE, Move killer2 = NO_MOVE) {
-        std::sort (list.begin(), list.begin() + size, [move, killer1, killer2](Move a, Move b){
+    // pv sort with mvv - lva and killers (not sure if they work)
+    inline void sort (Move pv, Move killer1 = NO_MOVE, Move killer2 = NO_MOVE) {
 
-            int score_a;
-            int score_b;
-
-            if (a == move) {
-                score_a = 10000;
-            } else if (a == killer1) {
-                score_a = 9900;
-            } else if (a == killer2) {
-                score_a = 9800;
-            } else if (CAPTURED(a) != NO_PIECE){
-                score_a = std::abs(material[CAPTURED(a)]) - std::abs(material[MOVED(a)]);
-                if (FLAG(a) >= MOVE_NPROMO_FLAG) score_a += promo_flag_bonus[FLAG(a) - MOVE_NPROMO_FLAG];
-            } else {
-                if (FLAG(a) >= MOVE_NPROMO_FLAG) score_a += promo_flag_bonus[FLAG(a) - MOVE_NPROMO_FLAG];
-                else score_a = -10000;
-            }
-
-            if (b == move) {
-                score_b = 10000;
-            } else if (b == killer1) {
-                score_b = 9900;
-            } else if (b == killer2) {
-                score_b = 9800;
-            } else if (CAPTURED(b) != NO_PIECE){
-                score_b = std::abs(material[CAPTURED(b)]) - std::abs(material[MOVED(b)]);
-                if (FLAG(b) >= MOVE_NPROMO_FLAG) score_b += promo_flag_bonus[FLAG(b) - MOVE_NPROMO_FLAG];
-            } else {
-                if (FLAG(b) >= MOVE_NPROMO_FLAG) score_b += promo_flag_bonus[FLAG(b) - MOVE_NPROMO_FLAG];
-                else score_b = -10000;
-            }
-
+        auto score = [pv, killer1, killer2](Move m) -> int {
+            if (m == pv) return 10000000;
             
+            if (CAPTURED(m) != NO_PIECE) {
+                int victim = std::abs(material[CAPTURED(m)]);
+                int attacker = std::abs(material[MOVED(m)]);
+                
+                
+                return 1000000 + (10000 * victim) + (1000 - attacker);
+            }
             
-            return score_a > score_b;
+            if (FLAG(m) >= MOVE_NPROMO_FLAG) {
+                
+                return 900000 + promo_flag_bonus[FLAG(m) - MOVE_NPROMO_FLAG];
+            }
+            
+            if (m == killer1) return 800000;
+            if (m == killer2) return 700000;
+            
+           
+            return 0;
+        };
+
+
+        std::sort (list.begin(), list.begin() + size, [pv, killer1, killer2, score](Move a, Move b){
+
+        
+            return score (a) > score(b);
         });
 
         

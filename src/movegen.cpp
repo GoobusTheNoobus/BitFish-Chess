@@ -14,7 +14,7 @@ void MoveGen::generate_pawn_moves (const Position& pos, MoveList& list) {
     Bitboard pieces = pos.get_bitboard(moved);
     
 
-    Bitboard r3 = is_white ? Bitboards::rank3 : Bitboards::rank6;
+    Bitboard r3_from_bottom = is_white ? Bitboards::rank3 : Bitboards::rank6;
     Bitboard promo = is_white ? Bitboards::rank8: Bitboards::rank1;
 
     Square ep = pos.game_info.ep_square;
@@ -33,7 +33,7 @@ void MoveGen::generate_pawn_moves (const Position& pos, MoveList& list) {
     Bitboard sp_promo = single_push & promo;
     Bitboard sp_reg = single_push & ~promo;
 
-    Bitboard double_push = (is_white ? ((single_push & r3) << 8): ((single_push & r3) >> 8)) & ~occupancy;
+    Bitboard double_push = (is_white ? ((single_push & r3_from_bottom) << 8): ((single_push & r3_from_bottom) >> 8)) & ~occupancy;
 
     Bitboard left_captures = (is_white ? 
         (pieces & ~Bitboards::file_a) << 7: 

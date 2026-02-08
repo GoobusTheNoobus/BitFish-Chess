@@ -13,7 +13,7 @@ constexpr int COLOR_NUM = 2;
 constexpr int BISHOP_BLOCKER_COMBINATIONS = 1 << 9;
 constexpr int ROOK_BLOCKER_COMBINATIONS = 1 << 12;
 
-constexpr int NO_MOVE = -1;
+constexpr uint32_t NO_MOVE = -1;
 
 const std::string STARTING_POS_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -64,7 +64,5 @@ constexpr int MATE_EVAL = 30000;
 constexpr int INF = 30001;
 constexpr int MAX_CP = 10000;
 
-constexpr std::array<std::array<int, 6>, 6> mvv_lva = {
 
-};
 

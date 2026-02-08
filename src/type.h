@@ -55,9 +55,7 @@ enum Square : uint8_t{
     NO_SQUARE
 };
 
-inline Square to_square (int squareInt) {
-    return Square (squareInt);
-}
+
 
 inline std::string square_to_str (Square square) {
     char file = 'a' + (square & 7);

@@ -4,6 +4,30 @@
 
 using namespace std::chrono;
 
+HashTable::HashTable(size_t mb) {
+    size_t entries = (mb * (1 << 20)) / sizeof(HTEntry);
+
+    table.resize(entries);
+}
+
+void HashTable::clear() {
+    std::fill (table.begin(), table.end(), HTEntry{0, 0, 0, EXACT, NO_MOVE});
+}
+
+size_t HashTable::index(Key hash) const {
+    return hash % table.size();
+}
+
+HTEntry* HashTable::probe (Key hash) {
+    size_t idx = index(hash);
+    if (table[idx].hash == hash) {
+        return &table[idx];
+    }
+
+    return nullptr;
+}
+
+
 namespace BitFish {
     int current_depth = 0;
     bool stop_flag = false;
@@ -178,7 +202,7 @@ namespace BitFish {
     }
 
     // no qsearch yet. keyword yet
-    int minimax (Position& pos, int depth, int alpha, int beta) {
+    int minimax (Position& pos, int depth, int alpha, int beta, bool null_ok) {
         nodes++;
 
         
@@ -200,7 +224,20 @@ namespace BitFish {
 
         int best_score = -INF;
 
-        
+        bool in_check = pos.is_in_check(pos.game_info.side_to_move);
+
+        if (null_ok && !in_check && depth >= 3 && eg_weight(pos) < 0.6) {
+            pos.null_move();
+            int null_score = -minimax(pos, depth - 3, -beta, -beta + 1, false);
+            pos.undo_move();
+            
+            if (null_score >= beta && std::abs(null_score) < MAX_CP) {
+                //std::cout << "Beta: " << beta << "\n";
+                //std::cout << "Null Score: " << null_score << "\n";
+                //::cout << "Depths from root: " << ply_from_root << "\n";
+                return beta;  // null prune
+            }
+        }
         
         for (int i = 0; i < moves.size; i++) {
             
@@ -251,7 +288,7 @@ namespace BitFish {
 
         if (legal_moves == 0) {
             if (pos.is_in_check(color_moving)) return - (MATE_EVAL - ply_from_root);
-            if (pos.is_in_check(opposite(color_moving))) return MATE_EVAL - ply_from_root;
+            
             return 0;
         }
 
@@ -297,7 +334,7 @@ namespace BitFish {
                 
             }
 
-            if (stop_flag) return {0, NO_MOVE};
+            if (stop_flag) return {NO_MOVE, 0};
 
             if (score > best_score) {
                 best_score = score;
@@ -358,7 +395,7 @@ namespace BitFish {
             
         }
 
-        std::cout << "bestmove " << move_to_string (best_move);
+        std::cout << "bestmove " << move_to_string (best_move) << "\n";
         
         
 

@@ -14,36 +14,44 @@
 
 using namespace std::chrono;
 
-
-/*int main() {
-    Bitboards::init();
-
-    std::string line;
-
-    
-
+void play_self () {
     while (true) {
-        std::cout << "\nEnter FEN (or 'q' to quit, empty = startpos): ";
-        std::getline(std::cin, line);
+        Move best_move = BitFish::iterative_deepen(100);
 
-        if (line == "q" || line == "quit") {
-            std::cout << "ByeBye!!!!!\n";
+        if (best_move == NO_MOVE) {
+            std::cout << "Game Ended! \n";
             break;
         }
 
-        std::string fen = line.empty() ? STARTING_POS_FEN : line;
+        BitFish::current_pos.make_move(best_move);
+        std::cout << move_to_string(best_move) << "\n";
+        
+        std::cout << BitFish::current_pos.to_string();
 
-        BitFish::position(fen);
         
 
-        std::cout << "Searching...\n";
-        BitFish::go(15, 20000);
+        
     }
-
-    return 0;
-}*/
+}
 
 int main() {
+    Bitboards::init();
+
+    while (true) {
+        std::string str;
+        std::getline(std::cin, str);
+
+        BitFish::current_pos.parse_fen(str);
+
+        BitFish::go(16, 4000);
+    }
+
+    
+
+    return 0;
+}
+
+/*int main() {
     std::srand(std::time(nullptr));
 
     Bitboards::init();
@@ -102,4 +110,4 @@ int main() {
     }
 
     return 0;
-}
+}*/

@@ -7,8 +7,36 @@
 #include "movegen.h"
 #include <chrono>
 #include <cstring>
+#include <vector>
 
 using namespace std::chrono;
+
+enum HTFlag {
+    EXACT,
+    AT_LEAST,
+    AT_MOVE
+};
+
+struct HTEntry {
+    Key hash;
+    int depth;
+    int score;
+    HTFlag flag;
+    Move best_move;
+};
+
+class HashTable {
+    std::vector <HTEntry> table;
+
+    public: 
+        HashTable (size_t mb = 64);
+        void clear();
+        HTEntry* probe (Key hash);
+        void store (Key hash, int depth, int score, HTFlag flag, Move best_move);
+    private:
+        size_t index (Key hash) const;
+};
+
 
 namespace BitFish {
 
@@ -21,6 +49,8 @@ namespace BitFish {
     extern int max_time;
     extern uint64_t nodes;
     extern Position current_pos;
+
+    extern HashTable tt;
 
     extern std::array<std::array<Move, 2>, MAX_DEPTH> killers;
 
@@ -38,11 +68,11 @@ namespace BitFish {
     }
     
 
-    void go (int depth_lim, int move_time);
+    void go (int depth_lim = MAX_DEPTH, int move_time = 100000);
     Move iterative_deepen (int move_time);
     void stop ();
     bool should_stop () ;
-    int minimax (Position& pos, int depth, int alpha, int beta);
+    int minimax (Position& pos, int depth, int alpha, int beta, bool null_ok=true);
     int qsearch (Position& pos, int depth, int alpha, int beta);
     void position (std::string_view fen);
 

@@ -144,8 +144,6 @@ void Position::parse_fen(std::string_view fen) {
         }
         i++;
     }
-    std::cout << rank << " \n";
-    std::cout << file << " \n";
 
     assert(rank == 0 && file == 8); // sanity check all squares processed
 
@@ -322,8 +320,20 @@ bool Position::can_castle_qs () const {
     
 }
 
+void Position::null_move() {
+    move_stack.push_back(NO_MOVE);
+    undo_stack.push_back(PACK_GI(game_info.rule_50_clock, game_info.ep_square, game_info.castling));
+
+    game_info.ep_square = NO_SQUARE;
+
+    game_info.side_to_move = opposite(game_info.side_to_move);
+}
+
 // assumes that move is legal: if not it does some funky stuff
 void Position::make_move(Move move) {
+
+    
+
     const int flag = FLAG(move);
     const Square to = Square(TO(move));
     const Square from = Square(FROM(move));
@@ -338,6 +348,8 @@ void Position::make_move(Move move) {
     move_stack.push_back(move);
     undo_stack.push_back(PACK_GI(game_info.rule_50_clock, game_info.ep_square, game_info.castling));
     
+    
+
     clear_square(from);
     
     
@@ -471,6 +483,10 @@ void Position::undo_move () {
     game_info.castling = CASTLING(prev_gi);
     game_info.ep_square = Square(EP(prev_gi));
     game_info.rule_50_clock = RULE_50(prev_gi);
+
+    if (move == NO_MOVE) {
+        return;
+    }
 
     const int flag = FLAG(move);
     const Square to = Square(TO(move));

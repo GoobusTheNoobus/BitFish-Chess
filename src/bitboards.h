@@ -24,7 +24,7 @@ namespace Sliders {
     int hash_bishop (Square square, Bitboard occupancy);
     int hash_rook (Square square, Bitboard occupancy);
 
-    // slow raycasting at compile tiem
+    // slow raycasting at compile time
     Bitboard raycast_bishop(Square square, Bitboard occupancy);
     Bitboard raycast_rook (Square square, Bitboard occupancy);
 

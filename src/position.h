@@ -103,6 +103,8 @@ struct Position {
 
     void make_move (Move move);
     void undo_move ();
+
+    void null_move ();
 };
 
 

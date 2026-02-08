@@ -7,12 +7,11 @@
 #include "move.h"
 #include "bitboards.h"
 
-#include <vector>
+
 
 
 
 namespace MoveGen {
-    
 
 
     MoveList generate_moves (const Position& pos);

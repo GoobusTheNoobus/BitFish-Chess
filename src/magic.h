@@ -74,7 +74,7 @@ constexpr std::array<uint64_t, BOARD_SIZE> rook_magic = {
     0x26002114058042ULL,
 };
 
-// bishop magic number
+
 constexpr std::array<uint64_t, BOARD_SIZE> bishop_magic = {
     0x89a1121896040240ULL,
     0x2004844802002010ULL,
