@@ -4,6 +4,7 @@
 #include "type.h"
 #include "bitboards.h"
 #include "move.h"
+#include "zobrist.h"
 
 #include <string>
 #include <sstream>
@@ -58,8 +59,14 @@ void Position::update_occupancies() {
 
 void Position::set_square(Square square, Piece piece) {
 
-    if (piece == NO_PIECE) clear_square(square);
+    if (piece == NO_PIECE) {
+        clear_square(square); 
+        return;
+    }
 
+    // HASH BRONW
+    hash ^= zobrist.pieces[piece][square];
+    
     // Mailbox
     board.mailbox[square] = piece;
 
@@ -72,7 +79,9 @@ void Position::set_square(Square square, Piece piece) {
 void Position::clear_square (Square square) {
 
     if (piece_at(square) == NO_PIECE) return;
+
     board.piece_bitboards[board.mailbox[square]] &= ~(1ULL << square);
+    hash ^= zobrist.pieces[board.mailbox[square]][square]; 
 
     board.mailbox[square] = NO_PIECE;
 
@@ -86,6 +95,14 @@ void Position::clear_board () {
     board.color_bitboards.fill(0ULL);
     board.occupancy = 0ULL;
 
+    game_info.castling = 0;
+    game_info.ep_square = NO_SQUARE;
+    game_info.rule_50_clock = 0;
+    game_info.side_to_move = WHITE;
+
+    
+    hash = zobrist.white_to_move ^ zobrist.castling[0];
+
     
 }
 
@@ -98,6 +115,7 @@ void Position::set_start_pos () {
 void Position::parse_fen(std::string_view fen) {
     
     clear_board(); // start from empty board
+    hash = 0;
 
     int rank = 7;
     int file = 0;
@@ -139,6 +157,7 @@ void Position::parse_fen(std::string_view fen) {
             }
 
             Square sq = Square(rank << 3 | file);
+            hash ^= zobrist.pieces[p][sq];
             set_square(sq, p);
             file++;
         }
@@ -152,6 +171,8 @@ void Position::parse_fen(std::string_view fen) {
 
     
     game_info.side_to_move = (fen[0] == 'w') ? WHITE : BLACK;
+    hash ^= (fen[0] == 'w') ? zobrist.white_to_move: 0;
+    // TODO: FINISH FIELD HASH
     fen.remove_prefix(2); 
 
     // castling rights
@@ -167,6 +188,7 @@ void Position::parse_fen(std::string_view fen) {
         ++j;
     }
     fen.remove_prefix(j + 1);
+    hash ^= zobrist.castling[game_info.castling];
 
     // en-croissant square
     if (fen[0] == '-') {
@@ -176,6 +198,7 @@ void Position::parse_fen(std::string_view fen) {
         char file_char = fen[0];
         char rank_char = fen[1];
         game_info.ep_square = Square((rank_char - '1') << 3 | (file_char - 'a'));
+        hash ^= zobrist.en_passant[game_info.ep_square];
         fen.remove_prefix(3);
     }
 
@@ -324,9 +347,18 @@ void Position::null_move() {
     move_stack.push_back(NO_MOVE);
     undo_stack.push_back(PACK_GI(game_info.rule_50_clock, game_info.ep_square, game_info.castling));
 
-    game_info.ep_square = NO_SQUARE;
+    if (game_info.ep_square != NO_SQUARE) {
+
+        hash ^= zobrist.en_passant[game_info.ep_square];
+
+        game_info.ep_square = NO_SQUARE;
+
+    }
+
+    
 
     game_info.side_to_move = opposite(game_info.side_to_move);
+    hash ^= zobrist.white_to_move;
 }
 
 // assumes that move is legal: if not it does some funky stuff
@@ -376,9 +408,13 @@ void Position::make_move(Move move) {
             
             // update castling rights
             if (us == WHITE) {
+                hash ^= zobrist.castling[game_info.castling];
                 game_info.castling &= ~(WKS_RIGHT | WQS_RIGHT);
+                hash ^= zobrist.castling[game_info.castling];
             } else {
+                hash ^= zobrist.castling[game_info.castling];
                 game_info.castling &= ~(BKS_RIGHT | BQS_RIGHT);
+                hash ^= zobrist.castling[game_info.castling];
             }
             break;
         }
@@ -392,7 +428,14 @@ void Position::make_move(Move move) {
         
         case MOVE_DOUBLE_PUSH_FLAG: {
             set_square(to, moved_piece);
+            if (game_info.ep_square != NO_SQUARE)
+                hash ^= zobrist.en_passant[game_info.ep_square];
+
             game_info.ep_square = Square(to + (us == WHITE ? -8 : 8));
+
+            if (game_info.ep_square != NO_SQUARE)
+                hash ^= zobrist.en_passant[game_info.ep_square];
+
             break;
         }
         
@@ -420,7 +463,7 @@ void Position::make_move(Move move) {
                 clear_square(to);
             }
             set_square(to, moved_piece);
-            game_info.ep_square = NO_SQUARE;
+            
             break;
         }
     }
@@ -439,16 +482,22 @@ void Position::make_move(Move move) {
     };
     
     if (castling_mask[from] && type_of(moved_piece) == ROOK) {
+        hash ^= zobrist.castling[game_info.castling];
         game_info.castling &= ~castling_mask[from];
+        hash ^= zobrist.castling[game_info.castling];
     }
     if (castling_mask[to] && captured != NO_PIECE && type_of(captured) == ROOK) {
+        hash ^= zobrist.castling[game_info.castling];
         game_info.castling &= ~castling_mask[to];
+        hash ^= zobrist.castling[game_info.castling];
     }
     
     // king moved
     if (type_of(moved_piece) == KING) {
+        hash ^= zobrist.castling[game_info.castling];
         const uint8_t king_mask = us == WHITE ? (WKS_RIGHT | WQS_RIGHT) : (BKS_RIGHT | BQS_RIGHT);
         game_info.castling &= ~king_mask;
+        hash ^= zobrist.castling[game_info.castling];
     }
     
     // update 50 rules
@@ -463,26 +512,43 @@ void Position::make_move(Move move) {
     
     // reset en croissant 
     if (flag != MOVE_DOUBLE_PUSH_FLAG) {
+        if (game_info.ep_square != NO_SQUARE)
+            hash ^= zobrist.en_passant[game_info.ep_square];
         game_info.ep_square = NO_SQUARE;
     }
     
     
     game_info.side_to_move = them;
+    hash ^= zobrist.white_to_move;
 }
+
 
 void Position::undo_move () {
     
     game_info.side_to_move = opposite(game_info.side_to_move);
+    hash ^= zobrist.white_to_move;
+
     Move move = move_stack.pop();
 
     
 
     uint32_t prev_gi = undo_stack.pop();
 
-    
+    hash ^= zobrist.castling[game_info.castling];
     game_info.castling = CASTLING(prev_gi);
+    hash ^= zobrist.castling[game_info.castling];
+
+    if (game_info.ep_square != NO_SQUARE) {
+        hash ^= zobrist.en_passant[game_info.ep_square];
+    };
     game_info.ep_square = Square(EP(prev_gi));
+    if (game_info.ep_square != NO_SQUARE) {
+        hash ^= zobrist.en_passant[game_info.ep_square];
+    };
+
     game_info.rule_50_clock = RULE_50(prev_gi);
+
+
 
     if (move == NO_MOVE) {
         return;

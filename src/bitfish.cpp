@@ -1,6 +1,7 @@
 // ------------------------------------ BITFISH ---------------------------------------
 
 #include "bitfish.h"
+#include "uci.h"
 
 using namespace std::chrono;
 
@@ -27,6 +28,17 @@ HTEntry* HashTable::probe (Key hash) {
     return nullptr;
 }
 
+void HashTable::store (Key hash, int depth, int score, HTFlag flag, Move best_move) {
+    size_t idx = index(hash);
+
+    
+    if (table[idx].hash == 0 || 
+        table[idx].hash == hash || 
+        depth >= table[idx].depth) {
+        table[idx] = HTEntry{hash, depth, score, flag, best_move};
+    }
+}
+
 
 namespace BitFish {
     int current_depth = 0;
@@ -35,6 +47,8 @@ namespace BitFish {
     int max_time;
     uint64_t nodes;
     Position current_pos(STARTING_POS_FEN);
+
+    HashTable tt;
 
     std::array<std::array<Move, 2>, MAX_DEPTH> killers;
 
@@ -122,10 +136,25 @@ namespace BitFish {
             score += material[piece];
         }
 
-        score += ((WKS_RIGHT & pos.game_info.castling) >> 0) * 20;
-        score += ((WQS_RIGHT & pos.game_info.castling) >> 1) * 20;
-        score -= ((BKS_RIGHT & pos.game_info.castling) >> 2) * 20;
-        score -= ((BQS_RIGHT & pos.game_info.castling) >> 3) * 20;
+        score += ((WKS_RIGHT & pos.game_info.castling) >> 0) * 8;
+        score += ((WQS_RIGHT & pos.game_info.castling) >> 1) * 6;
+        score -= ((BKS_RIGHT & pos.game_info.castling) >> 2) * 8;
+        score -= ((BQS_RIGHT & pos.game_info.castling) >> 3) * 6;
+
+        if (endgame < 0.5) {
+            if (pos.piece_at(E3) == W_BISHOP && pos.piece_at(E2) == W_PAWN) {
+                score -= 30;
+            }
+            if (pos.piece_at(D3) == W_BISHOP && pos.piece_at(D2) == W_PAWN) {
+                score -= 30;
+            }
+            if (pos.piece_at(E6) == B_BISHOP && pos.piece_at(E7) == B_PAWN) {
+                score += 30;
+            }
+            if (pos.piece_at(D6) == B_BISHOP && pos.piece_at(D7) == B_PAWN) {
+                score += 30;
+            }
+        }
 
 
         score = std::max(-MAX_CP, std::min(score, MAX_CP));
@@ -185,7 +214,7 @@ namespace BitFish {
 
             pos.undo_move();
 
-            nodes ++;
+            
 
             if (score >= beta) {
                 return beta;
@@ -201,22 +230,35 @@ namespace BitFish {
         return alpha;
     }
 
-    // no qsearch yet. keyword yet
+    // technically negamax
     int minimax (Position& pos, int depth, int alpha, int beta, bool null_ok) {
         nodes++;
 
         
         if (should_stop ()) return 0;
 
+        // copy value for later use
+        int original_alpha = alpha;
+
         if (depth <= 0) {
             
             return qsearch(pos, MAX_QDEPTH, alpha, beta);
         }
 
+        // probe 
+        HTEntry* entry = tt.probe(pos.hash);
+        Move tt_move = NO_MOVE;
+
+        if (entry != nullptr) {
+            tt_move = entry->best_move;
+
+            
+        }
+
         int ply_from_root = current_depth - depth;
 
         MoveList moves = MoveGen::generate_moves(pos);
-        moves.sort(NO_MOVE, killers[ply_from_root][0], killers[ply_from_root][1]);
+        moves.sort(tt_move, killers[ply_from_root][0], killers[ply_from_root][1]);
 
         Color color_moving = pos.game_info.side_to_move;
 
@@ -226,7 +268,7 @@ namespace BitFish {
 
         bool in_check = pos.is_in_check(pos.game_info.side_to_move);
 
-        if (null_ok && !in_check && depth >= 3 && eg_weight(pos) < 0.6) {
+        if (null_ok && !in_check && depth >= 3 && eg_weight(pos) < 0.7) {
             pos.null_move();
             int null_score = -minimax(pos, depth - 3, -beta, -beta + 1, false);
             pos.undo_move();
@@ -238,7 +280,10 @@ namespace BitFish {
                 return beta;  // null prune
             }
         }
-        
+
+        Move best_move = NO_MOVE;
+
+        int i = 0; 
         for (Move move: moves) {
             
             
@@ -250,17 +295,35 @@ namespace BitFish {
                 continue;
             }
 
+            int score;
+            if (i > 3 && depth >= 3 && !in_check && CAPTURED(move) == NO_PIECE && FLAG(move) < MOVE_NPROMO_FLAG) {
+                score = -minimax(pos, depth - 2, -alpha - 1, -alpha);
+
+                if (score > alpha) {
+                    score = -minimax(pos, depth - 1, -beta, -alpha);
+                }
+            } else {
+                score = -minimax(pos, depth - 1, -beta, -alpha);
+                
+
+            }
+
             
-            int score = -minimax(pos, depth - 1, -beta, -alpha);
+            
 
             pos.undo_move();
 
             
+            if (score > best_score) {
+                best_score = score;
+                best_move = move;
+            }
 
-            best_score = std::max(best_score, score);
+            
 
             legal_moves ++;
 
+            
             
 
             alpha = std::max(alpha, score);
@@ -270,7 +333,8 @@ namespace BitFish {
 
                 if (CAPTURED(move) == NO_PIECE)
                 store_killer(move, ply_from_root);
-
+                
+                i++;
                 break;
             };
 
@@ -278,6 +342,7 @@ namespace BitFish {
                 
                 return 0;
             }
+            i++;
 
         }
 
@@ -286,6 +351,19 @@ namespace BitFish {
             
             return 0;
         }
+
+        HTFlag flag;
+
+        if (best_score <= original_alpha) {
+            flag = AT_MOST;
+        } else if (best_score >= beta) {
+            flag = AT_LEAST;
+        } else {
+            flag = EXACT;
+        }
+
+        // store in tt 
+        tt.store(pos.hash, depth, best_score, flag, best_move);
 
         return best_score;
     }
@@ -298,15 +376,20 @@ namespace BitFish {
         Move best_move = NO_MOVE;
         int best_score = -INF;
 
-        MoveList moves = MoveGen::generate_moves(pos);
-        moves.sort(pv);
+        
         
         Color side_moving = pos.game_info.side_to_move;
 
         current_depth = depth;
 
+        HTEntry* ttentry = tt.probe(pos.hash);
+        Move tt_move = NO_MOVE;
 
-        
+        if (ttentry != nullptr) {
+            tt_move = ttentry->best_move;
+        }
+        MoveList moves = MoveGen::generate_moves(pos);
+        moves.sort(pv, NO_MOVE, NO_MOVE, tt_move);
 
         for (Move move: moves) {
             
@@ -339,7 +422,9 @@ namespace BitFish {
         }
 
         
-
+        if (best_move != NO_MOVE) {
+            tt.store(pos.hash, depth, best_score, EXACT, best_move);
+        }
 
 
         return {best_move, best_score};
@@ -359,7 +444,8 @@ namespace BitFish {
 
         Move best_move = NO_MOVE;
         int eval;
-        int multiplier = (current_pos.game_info.side_to_move == WHITE) ? 1: -1;
+        
+        int multiplier = current_pos.game_info.side_to_move == WHITE ? 1 : -1;
 
         int local_nodes = 0;
 
@@ -385,7 +471,11 @@ namespace BitFish {
 
             auto elapsed = duration_cast<microseconds> (steady_clock::now() - start_time).count();
 
-            std::cout << "info depth " << depth << " score cp " << (eval) << " nodes " << (nodes - local_nodes) << " nps " << (nodes * 1000000 / elapsed) << " time " << (elapsed / 1000) << " pv " << move_to_string (best_move) << "\n"; 
+            std::vector<Move> pv = {best_move};
+
+            UCI::info_depth(depth, eval, nodes - local_nodes, elapsed, pv);
+
+            
 
             
         }

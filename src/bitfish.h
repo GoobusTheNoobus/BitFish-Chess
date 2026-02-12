@@ -14,7 +14,7 @@ using namespace std::chrono;
 enum HTFlag {
     EXACT,
     AT_LEAST,
-    AT_MOVE
+    AT_MOST
 };
 
 struct HTEntry {

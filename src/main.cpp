@@ -37,13 +37,21 @@ void play_self () {
 int main() {
     Bitboards::init();
 
+    Position pos("rnbqkbnr/pppp1ppp/8/4p2Q/4P3/8/PPPP1PPP/RNB1KBNR b KQkq - 1 2");
+
+    MoveList list = MoveGen::generate_moves(pos);
+
+    list.sort(NORMAL_MOVE(B8, C6, B_KNIGHT, NO_PIECE), NORMAL_MOVE(D7, D6, B_PAWN, NO_PIECE), NO_MOVE, NORMAL_MOVE(F8, D6, B_BISHOP, NO_PIECE));
+
+    list.print();
+
     while (true) {
         std::string str;
         std::getline(std::cin, str);
 
         BitFish::current_pos.parse_fen(str);
 
-        BitFish::go(16, 4000);
+        BitFish::go(16, 20000);
     }
 
     

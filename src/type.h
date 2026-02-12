@@ -11,6 +11,8 @@ using Key = uint64_t;
 using PackedGI = uint32_t;
 
 
+
+
 enum Color : uint8_t {
     WHITE,
     BLACK

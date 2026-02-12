@@ -67,6 +67,9 @@ struct Position {
     // Move History
     MoveList move_stack;
     UndoStack undo_stack;
+    
+    // hash brown
+    uint64_t hash;
 
     // constructors, parses FEN, or else sets the starting position
     Position() {

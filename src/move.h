@@ -2,7 +2,9 @@
 
 #pragma once
 #include "type.h"
-#include "position.h"
+#include "constants.h"
+
+#include <array>
 #include <vector>
 #include <bitset>
 #include <algorithm>
@@ -116,10 +118,11 @@ struct MoveList {
     }
 
     // pv sort with mvv - lva and killers (not sure if they work)
-    inline void sort (Move pv, Move killer1 = NO_MOVE, Move killer2 = NO_MOVE) {
+    inline void sort (Move pv, Move killer1 = NO_MOVE, Move killer2 = NO_MOVE, Move tt_move = NO_MOVE) {
 
-        auto score = [pv, killer1, killer2](Move m) -> int {
+        auto score = [pv, killer1, killer2, tt_move](Move m) -> int {
             if (m == pv) return 10000000;
+            if (m == tt_move) return 9999999;
             
             if (CAPTURED(m) != NO_PIECE) {
                 int victim = std::abs(material[CAPTURED(m)]);
@@ -136,7 +139,8 @@ struct MoveList {
             
             if (m == killer1) return 800000;
             if (m == killer2) return 700000;
-            
+
+            if (FLAG(m) == MOVE_DOUBLE_PUSH_FLAG) return 1000;
            
             return 0;
         };
