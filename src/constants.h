@@ -64,7 +64,7 @@ constexpr int MATE_EVAL = 30000;
 constexpr int INF = 30001;
 constexpr int MAX_CP = 10000;
 
-const std::string VERSION = "v0.4.0";
+const std::string VERSION = "v0.4.1";
 
 constexpr int KINGSIDE_CASTLING_BONUS = 8;
 constexpr int QUEENSIDE_CASTLING_BONUS = 6;

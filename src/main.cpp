@@ -36,6 +36,7 @@ void play_self () {
 
 int main() {
     Bitboards::init();
+    std::cout << "BitFish " << VERSION << "\n";
 
     while (true) {
         std::string str;
