@@ -1,3 +1,9 @@
+/**
+ * uci.h
+ * 
+ * Universal Chess Interface support so it can play on lichess & stuff
+ */
+
 #pragma once
 #include <iostream>
 #include <vector>

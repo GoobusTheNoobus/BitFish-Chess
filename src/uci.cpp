@@ -1,3 +1,10 @@
+/**
+ * uci.cpp
+ * 
+ * Universal Chess Interface Implementation
+ * Should work fine, but bugs expected
+ */
+
 #include "uci.h"
 #include "bitfish.h"
 #include "movegen.h"
@@ -22,7 +29,7 @@ namespace {
 }
 
 void UCI::info_depth (int depth, int eval, uint64_t nodes, uint64_t elapsed, const std::vector<Move>& pv) {
-    std::cout << "info depth " << depth << " score cp " << (eval) << " nodes " << (nodes) << " nps " << (nodes * 1000000 / elapsed) << " time " << (elapsed / 1000) << " pv ";
+    std::cout << "info depth " << depth << " score cp " << (eval) << " nodes " << (nodes) << " nps " << (nodes * 1000 / std::max(elapsed, 1ULL)) << " time " << elapsed << " pv ";
             
     for (Move move: pv) {
         std::cout << move_to_string(move) << " ";

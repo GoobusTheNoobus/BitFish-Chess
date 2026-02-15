@@ -1,4 +1,9 @@
-// ------------------------------------ BITFISH ---------------------------------------
+/**
+ * movegen.h
+ * 
+ * MoveGen interface
+ * Generates moves into a MoveList
+ */
 
 #pragma once
 #include "position.h"
@@ -6,10 +11,6 @@
 #include "constants.h"
 #include "move.h"
 #include "bitboards.h"
-
-
-
-
 
 namespace MoveGen {
 

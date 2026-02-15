@@ -1,10 +1,13 @@
-// ------------------------------------ BITFISH ---------------------------------------
+/**
+ * magic.h
+ * 
+ * Contains Magic Numbers used for magic bitboards
+ */
 
 #pragma once
 
 #include <array>
 #include "constants.h"
-#include "type.h"
 
 
 constexpr std::array<uint64_t, BOARD_SIZE> rook_magic = {

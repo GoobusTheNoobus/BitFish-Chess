@@ -1,10 +1,26 @@
-// ------------------------------------ BITFISH ---------------------------------------
+/**
+ * movegen.cpp
+ * 
+ * MoveGen Implementation
+ * Generates moves into a MoveList
+ */
 
 #include "movegen.h"
 
+MoveList MoveGen::generate_moves (const Position& pos) {
+    MoveList moves;
 
-void MoveGen::generate_pawn_moves (const Position& pos, MoveList& list) {
-    
+    generate_pawn_moves(pos, moves);
+    generate_knight_moves(pos, moves);
+    generate_bishop_moves(pos, moves);
+    generate_rook_moves(pos, moves);
+    generate_queen_moves(pos, moves);
+    generate_king_moves(pos, moves);
+
+    return moves;
+}
+
+void MoveGen::generate_pawn_moves (const Position& pos, MoveList& list) {   
     Color us = pos.game_info.side_to_move;
     Color them = opposite(us);
 
@@ -13,13 +29,14 @@ void MoveGen::generate_pawn_moves (const Position& pos, MoveList& list) {
     Piece moved = is_white? W_PAWN: B_PAWN;
     Bitboard pieces = pos.get_bitboard(moved);
     
+    // Early exit
+    if (!pieces) return;
 
     Bitboard r3_from_bottom = is_white ? Bitboards::rank3 : Bitboards::rank6;
     Bitboard promo = is_white ? Bitboards::rank8: Bitboards::rank1;
 
     Square ep = pos.game_info.ep_square;
-    // early exit
-    if (!pieces) return;
+    
 
     int push_offset = is_white ? 8: -8;
     int lc_offset = is_white ? 7: -9;
@@ -40,7 +57,6 @@ void MoveGen::generate_pawn_moves (const Position& pos, MoveList& list) {
         (pieces & ~Bitboards::file_a) >> 9) 
     & enemy_pieces;
 
-    
 
     Bitboard right_captures = (is_white ? 
         (pieces & ~Bitboards::file_h) << 9: 
@@ -109,19 +125,15 @@ void MoveGen::generate_pawn_moves (const Position& pos, MoveList& list) {
     }
 
     if (ep != NO_SQUARE) {
-        // the opposite color bitboard contains the squares that our pawns have to be to en passant
-    Bitboard en_passant_bb = Bitboards::get_pawn_attacks(ep, them) & pieces; 
-    while (en_passant_bb) {
-        int square = __builtin_ctzll (en_passant_bb);
-        en_passant_bb &= en_passant_bb - 1;
-        list.push_back(EN_PASSANT(square, ep, moved, is_white ? B_PAWN : W_PAWN));
+        // The opposite color bitboard contains the squares that our pawns have to be to en passant
+        Bitboard en_passant_bb = Bitboards::get_pawn_attacks(ep, them) & pieces; 
+        while (en_passant_bb) {
+            int square = __builtin_ctzll (en_passant_bb);
+            en_passant_bb &= en_passant_bb - 1;
+            list.push_back(EN_PASSANT(square, ep, moved, is_white ? B_PAWN : W_PAWN));
+        }
     }
-    }
-    
-
-    
-
-    
+     
     
 }
 
@@ -137,7 +149,7 @@ void MoveGen::generate_knight_moves (const Position& pos, MoveList& list) {
     Piece moved = us == WHITE ? W_KNIGHT : B_KNIGHT;
     Bitboard pieces = pos.get_bitboard(moved);
 
-    // early exit
+    // Early Exit
     if (!pieces) return;
 
     while (pieces) {
@@ -153,7 +165,7 @@ void MoveGen::generate_knight_moves (const Position& pos, MoveList& list) {
             move_bb &= move_bb - 1;
         }
 
-        // clear lsb
+        // Clear LSB
         pieces &= pieces - 1;
     }
 }
@@ -185,11 +197,11 @@ void MoveGen::generate_king_moves (const Position& pos, MoveList& list) {
             move_bb &= move_bb - 1;
         }
 
-        // clear lsb
+        // Clear LSB
         pieces &= pieces - 1;
     }
 
-    // castling
+    // Check castling
     if (pos.can_castle_ks()) {
         list.push_back(CASTLING_MOVE(us == WHITE ? E1: E8, us == WHITE ? G1: G8, moved));
     }
@@ -210,7 +222,7 @@ void MoveGen::generate_bishop_moves (const Position& pos, MoveList& list) {
     Piece moved = us == WHITE ? W_BISHOP : B_BISHOP;
     Bitboard pieces = pos.get_bitboard(moved);
 
-    // early exit
+    // Early exit
     if (!pieces) return;
 
     while (pieces) {
@@ -227,7 +239,7 @@ void MoveGen::generate_bishop_moves (const Position& pos, MoveList& list) {
             move_bb &= move_bb - 1;
         }
 
-        // clear lsb
+        // Clear LSB
         pieces &= pieces - 1;
     }
 }
@@ -243,7 +255,7 @@ void MoveGen::generate_rook_moves (const Position& pos, MoveList& list) {
     Piece moved = us == WHITE ? W_ROOK : B_ROOK;
     Bitboard pieces = pos.get_bitboard(moved);
 
-    // early exit
+    // Early exit
     if (!pieces) return;
 
     while (pieces) {
@@ -277,7 +289,7 @@ void MoveGen::generate_queen_moves (const Position& pos, MoveList& list) {
 
     Bitboard pieces = pos.get_bitboard(moved);
 
-    // early exit
+    // Early exit
     if (!pieces) return;
 
     while (pieces) {
@@ -285,6 +297,7 @@ void MoveGen::generate_queen_moves (const Position& pos, MoveList& list) {
         int from = __builtin_ctzll (pieces);
         Square square_enum = Square(from);
 
+        // Combine bishop and rook attacks from that square into one bitboard
         Bitboard move_bb = (Bitboards::get_bishop_attacks(square_enum, pos.board.occupancy) | Bitboards::get_rook_attacks(square_enum, pos.board.occupancy)) & ~friendlies;
 
         while (move_bb) {
@@ -294,22 +307,10 @@ void MoveGen::generate_queen_moves (const Position& pos, MoveList& list) {
             move_bb &= move_bb - 1;
         }
 
-        // clear lsb
+        // Clear LSB
         pieces &= pieces - 1;
     }}
 
-MoveList MoveGen::generate_moves (const Position& pos) {
-    MoveList moves;
 
-    generate_pawn_moves(pos, moves);
-    generate_knight_moves(pos, moves);
-    generate_bishop_moves(pos, moves);
-    generate_rook_moves(pos, moves);
-    generate_queen_moves(pos, moves);
-    generate_king_moves(pos, moves);
-    
-
-    return moves;
-}
 
 

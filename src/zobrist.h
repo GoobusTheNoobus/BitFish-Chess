@@ -1,3 +1,9 @@
+/**
+ * zobrist.h
+ * 
+ * Generates random numbers for zobrist hashing
+ */
+
 #pragma once
 
 #include <random>
@@ -14,6 +20,7 @@ struct Zobrist {
     Key white_to_move;
     
     Zobrist () {
+        // Sorry its not funny ik
         std::mt19937_64 rng(6767);
 
         for (int piece = 0; piece < PIECE_NUM; ++piece) {

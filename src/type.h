@@ -1,8 +1,18 @@
-// ------------------------------------ BITFISH ---------------------------------------
+/**
+ * type.h
+ * 
+ * Type aliases, enums, and some structs here
+ * Color/Piece functions
+ */
 
 #pragma once
 #include <cstdint>
 #include <iostream>
+#include <atomic>
+#include <chrono>
+#include <vector>
+
+using namespace std::chrono;
 
 using Bitboard = uint64_t;
 using CastlingRights = uint8_t;
@@ -55,6 +65,46 @@ enum Square : uint8_t{
     A7, B7, C7, D7, E7, F7, G7, H7,
     A8, B8, C8, D8, E8, F8, G8, H8,
     NO_SQUARE
+};
+
+
+enum HTFlag {
+    EXACT,
+    AT_LEAST,
+    AT_MOST
+};
+
+struct HTEntry {
+    Key hash;
+    int depth;
+    int score;
+    HTFlag flag;
+    Move best_move;
+};
+
+struct SearchInfo {
+    int depth = 0;
+    uint64_t nodes = 0;
+
+    steady_clock::time_point start_time;
+    int max_time_ms = 0;
+
+    std::atomic<bool> stop {false};
+
+    void reset ();
+
+};
+
+class HashTable {
+    std::vector <HTEntry> table;
+
+    public: 
+        HashTable (size_t mb = 64);
+        void clear();
+        HTEntry* probe (Key hash);
+        void store (Key hash, int depth, int score, HTFlag flag, Move best_move);
+    private:
+        size_t index (Key hash) const;
 };
 
 

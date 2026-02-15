@@ -1,4 +1,8 @@
-// ------------------------------------ BITFISH ---------------------------------------
+/**
+ * position.h
+ * 
+ * Position representation interface as well as other related stuff
+ */
 
 #pragma once
 
@@ -9,6 +13,8 @@
 #include "constants.h"
 #include "move.h"
 
+// BitFish uses 12 unsigned long long bitboards, one per piece, and a mailbox for piece lookups
+// Extra bitboards for faster Move Generation
 struct Board {
     std::array <Bitboard, PIECE_NUM> piece_bitboards;
     std::array <Piece, BOARD_SIZE> mailbox;
@@ -25,6 +31,7 @@ struct GameInfo {
     uint8_t rule_50_clock;
 };
 
+// A stack for GameInfos packed into a 32 bit integer
 struct UndoStack {
     std::array<PackedGI, 256> list;
     int size = 0;
@@ -53,9 +60,6 @@ struct UndoStack {
     inline Move& operator[](int index) {
         return list[index];
     }
-
-    
-
 };
 
 struct Position {
@@ -68,10 +72,10 @@ struct Position {
     MoveList move_stack;
     UndoStack undo_stack;
     
-    // hash brown
+    // Hash Brown
     uint64_t hash;
 
-    // constructors, parses FEN, or else sets the starting position
+    // Constructors, parses FEN, or else sets the starting position
     Position() {
         set_start_pos();
     }
@@ -80,18 +84,18 @@ struct Position {
         parse_fen(fen);
     }
 
-    // lookups
+    // Lookup functions
     Bitboard get_bitboard (Piece piece) const;
     Piece piece_at (Square square) const;
 
-    // printing
+    // For printing the position
     std::string to_string() const;
 
-    // editing functions
+    // Editting functions
     void update_occupancies();
     void set_square(Square square, Piece piece);
     void clear_square (Square square);
-    void clear_board();
+    void clear_pos();
 
     void set_start_pos();
     void parse_fen(const std::string_view fen = STARTING_POS_FEN);

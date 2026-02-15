@@ -1,39 +1,14 @@
-// ------------------------------------ BITFISH ---------------------------------------
-
-#include <iostream>
-#include <chrono>
-#include <iomanip>
-
-#include <cstdlib>
-#include <ctime>
+/**
+ * main.cpp
+ * 
+ * Entry point
+ */
 
 #include "bitboards.h"
-#include "position.h"
-#include "move.h"
-#include "bitfish.h"
 #include "uci.h"
 
 using namespace std::chrono;
 
-void play_self () {
-    while (true) {
-        Move best_move = BitFish::iterative_deepen(100);
-
-        if (best_move == NO_MOVE) {
-            std::cout << "Game Ended! \n";
-            break;
-        }
-
-        BitFish::current_pos.make_move(best_move);
-        std::cout << move_to_string(best_move) << "\n";
-        
-        std::cout << BitFish::current_pos.to_string();
-
-        
-
-        
-    }
-}
 
 int main() {
     Bitboards::init();

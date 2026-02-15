@@ -1,4 +1,8 @@
-// ------------------------------------ BITFISH ---------------------------------------
+/**
+ * position.cpp
+ * 
+ * Position implementation
+ */
 
 #include "position.h"
 #include "type.h"
@@ -14,12 +18,13 @@
 
 
 
-// lookups
+// Lookup a certain piece's 
 Bitboard Position::get_bitboard(Piece piece) const {
     assert (piece != NO_PIECE && "Trying to get bitboard of NO_PIECE");
     return board.piece_bitboards[piece];
 }
 
+// Piece A
 Piece Position::piece_at(Square square) const {
     return board.mailbox[square];
 }
@@ -88,7 +93,7 @@ void Position::clear_square (Square square) {
     
 }
 
-void Position::clear_board () {
+void Position::clear_pos () {
     board.mailbox.fill(NO_PIECE);
 
     board.piece_bitboards.fill(0ULL);
@@ -114,7 +119,7 @@ void Position::set_start_pos () {
 
 void Position::parse_fen(std::string_view fen) {
     
-    clear_board(); // start from empty board
+    clear_pos(); // start from empty board
     hash = 0;
 
     int rank = 7;
@@ -126,15 +131,19 @@ void Position::parse_fen(std::string_view fen) {
     while (i < fen.size() && fen[i] != ' ') {
         char c = fen[i];
 
-        if (c == '/') {         // move to next rank
-            assert(file == 8);  // sanity check
+        if (c == '/') {       
+            assert(file == 8);  // Checking
             file = 0;
             rank--;
         }
-        else if (std::isdigit(c)) {  // empty squares
+
+        // Empty squares
+        else if (std::isdigit(c)) {  
             file += c - '0';
         }
-        else {  // a piece
+
+        // Piece
+        else {  
             assert(file < 8 && rank >= 0);
 
             Piece p;
@@ -164,15 +173,15 @@ void Position::parse_fen(std::string_view fen) {
         i++;
     }
 
-    assert(rank == 0 && file == 8); // sanity check all squares processed
+    assert(rank == 0 && file == 8); // Sanity check all squares processed
 
-    // parse remaining fields
+    // Parse remaining fields
     fen.remove_prefix(i + 1); 
 
     
     game_info.side_to_move = (fen[0] == 'w') ? WHITE : BLACK;
     hash ^= (fen[0] == 'w') ? zobrist.white_to_move: 0;
-    // TODO: FINISH FIELD HASH
+
     fen.remove_prefix(2); 
 
     // castling rights
@@ -219,34 +228,33 @@ bool Position::is_square_attacked (Square square, Color color) const {
     Bitboard queens = color == WHITE ? get_bitboard(W_QUEEN): get_bitboard(B_QUEEN);
     Bitboard kings = color == WHITE ? get_bitboard(W_KING): get_bitboard(B_KING);
 
-    // pawns first
+    // Pawns first
     if ((Bitboards::get_pawn_attacks(square, opposite(color)) & pawns) != 0ULL) 
         return true;
-        // if color == WHITE, the black pawn attack of that square is the square(s) that if a white pawn stands on would attack that square. 
+        // If color == WHITE, the black pawn attack of that square is the square(s) that if a white pawn stands on would attack that square. 
+        // I feel so smart
     
-    // knights
+    // Knights
     if ((Bitboards::get_knight_attacks(square) & knights) != 0ULL)
         return true;
 
     Bitboard rook_attacks = Bitboards::get_rook_attacks(square, board.occupancy);
     Bitboard bishop_attacks = Bitboards::get_bishop_attacks(square, board.occupancy);
 
-    // rooks & queens
+    // Rookies & Fatties
     if (((rook_attacks & rooks) != 0ULL) || ((rook_attacks & queens) != 0ULL)) 
         return true;
 
-    // bishops & queens
+    // Juicers & Fatties
     if (((bishop_attacks & bishops) != 0ULL) || ((bishop_attacks & queens) != 0ULL))
         return true;
 
-    // kings
+    // Chicken
     if ((Bitboards::get_king_attacks(square) & kings) != 0ULL)
         return true;
 
     
     return false;
-
-    
 }
 
 
@@ -361,7 +369,8 @@ void Position::null_move() {
     hash ^= zobrist.white_to_move;
 }
 
-// assumes that move is legal: if not it does some funky stuff
+// Assumes that the move is legal, or else it does some funky stuff to the position
+// This includes: Pawns on back rank, messed up en passant square, 
 void Position::make_move(Move move) {
 
     
@@ -651,7 +660,3 @@ void Position::undo_move () {
     
 
 }
-
-
-
-
