@@ -15,23 +15,24 @@
 #include <sstream>
 
 namespace {
-    // precomputed attack tables at runtime
+    // Precomputed Attack Tables for leaper pieces
     std::array<Bitboard, BOARD_SIZE> knight_table;
     std::array<Bitboard, BOARD_SIZE> king_table;
     std::array<std::array<Bitboard, BOARD_SIZE>, COLOR_NUM> pawn_table;
 
-    // magic tables
+    // Precomputed Attack Tables for slider pieces
     std::array<std::array<Bitboard, BISHOP_BLOCKER_COMBINATIONS>, BOARD_SIZE> bishop_table;
     std::array<std::array<Bitboard, ROOK_BLOCKER_COMBINATIONS>, BOARD_SIZE> rook_table;
 
-    // masks;
+    // Slider Blocker Masks
     std::array<Bitboard, BOARD_SIZE> rook_masks;
     std::array<Bitboard, BOARD_SIZE> bishop_masks;
 
+    // The number of '1' bits in each square of the masks
     std::array<int, BOARD_SIZE> rook_relevancy;
     std::array<int, BOARD_SIZE> bishop_relevancy;
 
-
+    // Forward declatation
     void precompute_knight (Square square);
     void precompute_king (Square square);
     void precompute_wpawn (Square square);
@@ -135,7 +136,6 @@ namespace {
         
         int r;
         int f;
-        // White Pawn
             
             
         for (const auto& vector: white_pawn_vectors) {

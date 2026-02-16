@@ -14,6 +14,8 @@
 #include <string>
 #include <thread>
 #include <atomic>
+#include <algorithm>
+#include <cctype>
 
 namespace {
     std::thread search_thread;
@@ -55,7 +57,8 @@ void UCI::info_depth (int depth, int eval, uint64_t nodes, uint64_t elapsed, con
     else score_str = "cp " + std::to_string(eval);
 
     std::cout << "info depth " << depth << " score " << score_str << " nodes " << (nodes) << " nps " << (nodes * 1000 / std::max<uint64_t>(elapsed, 1)) << " time " << elapsed << " pv ";
-            
+    
+    // For showing principle variations
     for (Move move: pv) {
         std::cout << move_to_string(move) << " ";
     }
@@ -174,7 +177,7 @@ void UCI::parse_go(const std::string& command) {
         
         int our_time = (BitFish::current_pos.game_info.side_to_move == WHITE) ? wtime + winc  : btime + binc ;
         
-        // use 1/50 of remaining time
+        // use 1/40 of remaining time
         if (our_time > 100) {
             time_limit = std::min(our_time - 100, our_time / 40);
             time_limit = std::max(100, time_limit);  
@@ -212,7 +215,14 @@ void UCI::loop () {
         std::string string;
         std::getline(std::cin, string);
 
+        if (std::all_of(string.begin(), string.end(), [](unsigned char c) {
+            return std::isspace(c);
+        })) continue;
+
         std::istringstream iss (string);
+
+        
+
         std::string command;
 
         iss >> command;

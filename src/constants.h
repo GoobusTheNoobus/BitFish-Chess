@@ -70,7 +70,7 @@ constexpr int MATE_EVAL = 30000;
 constexpr int INF = 30001;
 constexpr int MAX_CP = 10000;
 
-const std::string VERSION = "v0.5.2";
+const std::string VERSION = "v0.5.3";
 
 constexpr int KINGSIDE_CASTLING_BONUS = 8;
 constexpr int QUEENSIDE_CASTLING_BONUS = 6;
@@ -93,6 +93,8 @@ constexpr int ROOK_GAME_PHASE = 27;
 constexpr int QUEEN_GAME_PHASE = 38;
 
 constexpr int MAX_GAME_PHASE = 218;
+
+constexpr int FUTILITY_MARGIN = 150;
 
 constexpr std::array<int, 8> passed_pawn_bonuses = {
     0, 10, 15, 30, 50, 100, 150, 0

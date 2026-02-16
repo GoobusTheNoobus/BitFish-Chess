@@ -338,6 +338,8 @@ namespace BitFish {
         Move best_move = NO_MOVE;
 
         int i = 0; 
+        int cutoff_num = 0;
+
         for (Move move: moves) {
             
             
@@ -349,6 +351,14 @@ namespace BitFish {
                 continue;
             }
 
+            if (i > 3 && depth <= 3 && !in_check) {
+                int eval = evaluate(pos);
+
+                if (eval + FUTILITY_MARGIN * depth < alpha && CAPTURED(move) == NO_PIECE && pos.is_in_check(opposite(color_moving))) {
+                    pos.undo_move();
+                    continue;
+                }
+            }
             
             int score;
 
@@ -596,6 +606,35 @@ namespace BitFish {
                 steady_clock::now() - search_info.start_time).count();
 
             std::vector<Move> pv = { best_move };
+
+            int moves = 0;
+
+            BitFish::current_pos.make_move(best_move);
+
+            // Track PV through transposition table
+
+            // I declared i outside of the loop because we need to use it later while undoing the moves
+            int i; 
+            for (i = 0; i < depth; i++) {
+                // Probe TT
+                HTEntry* probe = BitFish::tt.probe(BitFish::current_pos.hash);
+
+                // Entry does not exist
+                if (probe == nullptr || probe->best_move == NO_MOVE) {
+                    break;
+                }
+
+                
+                pv.push_back(probe->best_move);
+                BitFish::current_pos.make_move(probe->best_move);
+
+            }
+
+            for (int j = 0; j <= i; j++) {
+                BitFish::current_pos.undo_move();
+            }
+
+            
 
             UCI::info_depth(depth,
                             eval,
