@@ -54,7 +54,7 @@ void UCI::info_depth (int depth, int eval, uint64_t nodes, uint64_t elapsed, con
     }
     else score_str = "cp " + std::to_string(eval);
 
-    std::cout << "info depth " << depth << " score " << score_str << " nodes " << (nodes) << " nps " << (nodes * 1000 / std::max(elapsed, 1UL)) << " time " << elapsed << " pv ";
+    std::cout << "info depth " << depth << " score " << score_str << " nodes " << (nodes) << " nps " << (nodes * 1000 / std::max<uint64_t>(elapsed, 1)) << " time " << elapsed << " pv ";
             
     for (Move move: pv) {
         std::cout << move_to_string(move) << " ";
@@ -176,7 +176,7 @@ void UCI::parse_go(const std::string& command) {
         
         // use 1/50 of remaining time
         if (our_time > 100) {
-            time_limit = std::min(our_time - 100, our_time / 50);
+            time_limit = std::min(our_time - 100, our_time / 40);
             time_limit = std::max(100, time_limit);  
         }
     }

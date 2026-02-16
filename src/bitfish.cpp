@@ -609,7 +609,7 @@ namespace BitFish {
 
 
         
-        std::cout << "bestmove " << move_to_string (best_move) << "\n";
+        std::cout << "bestmove " << move_to_string (best_move) << std::endl;
         
         
 
