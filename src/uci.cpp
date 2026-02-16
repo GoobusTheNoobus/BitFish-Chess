@@ -238,6 +238,7 @@ void UCI::loop () {
             if (is_searching) {
                 stop();
             }
+            cleanup_search_thread();
             break;
         } 
         else {
