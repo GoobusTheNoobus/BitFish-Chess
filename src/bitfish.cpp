@@ -61,7 +61,7 @@ namespace BitFish {
     SearchInfo search_info;
 
     // The current position, set by using the 'position' uci command
-    Position current_pos;
+    Position current_pos(STARTING_POS_FEN);
 
     // Transposition Table for move ordering
     HashTable tt;
@@ -112,14 +112,14 @@ namespace BitFish {
 
         // Include every piece except for kings
         int phase = 
-            __builtin_popcountll(pos.get_bitboard(W_KNIGHT) | pos.get_bitboard(B_KNIGHT)) +
-            __builtin_popcountll(pos.get_bitboard(W_BISHOP) | pos.get_bitboard(B_BISHOP)) +
-            __builtin_popcountll(pos.get_bitboard(W_ROOK)   | pos.get_bitboard(B_ROOK))   +
-            __builtin_popcountll(pos.get_bitboard(W_QUEEN)  | pos.get_bitboard(B_QUEEN));
+            __builtin_popcountll(pos.get_bitboard(W_KNIGHT) | pos.get_bitboard(B_KNIGHT)) * KNIGHT_GAME_PHASE +
+            __builtin_popcountll(pos.get_bitboard(W_BISHOP) | pos.get_bitboard(B_BISHOP)) * BISHOP_GAME_PHASE +
+            __builtin_popcountll(pos.get_bitboard(W_ROOK)   | pos.get_bitboard(B_ROOK)) * ROOK_GAME_PHASE +
+            __builtin_popcountll(pos.get_bitboard(W_QUEEN)  | pos.get_bitboard(B_QUEEN)) * QUEEN_GAME_PHASE;
         
-        const int max_phase = 14;
+        
 
-        return 1 - std::min (1.0f, static_cast<float> (phase) / max_phase);
+        return 1 - std::min (1.0f, static_cast<float> (phase) / MAX_GAME_PHASE);
     }
 
     
@@ -209,27 +209,50 @@ namespace BitFish {
             score -= BISHOP_PAIR_BONUS;
         }
 
-        Bitboard white_king_surrounding = Bitboards::get_king_attacks(Square(__builtin_ctzll (pos.get_bitboard(W_KING))));
-        Bitboard black_king_surrounding = Bitboards::get_king_attacks(Square(__builtin_ctzll (pos.get_bitboard(B_KING))));
+        // Isolated Pawn
+        Bitboard white_pawns = pos.get_bitboard(W_PAWN);
+        Bitboard white_pawns_copy = white_pawns;
+        Bitboard black_pawns = pos.get_bitboard(B_PAWN);
+        Bitboard black_pawns_copy = black_pawns;
 
-        while (white_king_surrounding) {
-            Square square = Square(__builtin_ctzll (white_king_surrounding));
+        while (white_pawns) {
+            Square square = Square(__builtin_ctzll(white_pawns));
+            int file = square & 7;
 
-            if (pos.is_square_attacked (square, BLACK)) {
-                score -= KING_SQUARE_CONTROLLED_BONUS;
+            Bitboard adjacent = 0ULL;
+
+            if (file > 0) {
+                adjacent |= Bitboards::file_a >> (file - 1);
+            } 
+            if (file < 7) {
+                adjacent |= Bitboards::file_a >> (file + 1);
             }
 
-            white_king_surrounding &= white_king_surrounding - 1;
+            if (!(adjacent & white_pawns_copy)) {
+                score -= ISOLATED_PAWN_PENALTY;
+            }
+
+            white_pawns &= white_pawns - 1;
         }
 
-        while (black_king_surrounding) {
-            Square square = Square(__builtin_ctzll (black_king_surrounding));
+        while (black_pawns) {
+            Square square = Square(__builtin_ctzll (black_pawns));
+            int file = square & 7;
 
-            if (pos.is_square_attacked (square, WHITE)) {
-                score += KING_SQUARE_CONTROLLED_BONUS;
+            Bitboard adjacent = 0ULL;
+
+            if (file > 0) {
+                adjacent |= Bitboards::file_a >> (file - 1);
+            } 
+            if (file < 7) {
+                adjacent |= Bitboards::file_a >> (file + 1);
             }
 
-            black_king_surrounding &= black_king_surrounding - 1;
+            if (!(adjacent & black_pawns_copy)) {
+                score += ISOLATED_PAWN_PENALTY;
+            }
+
+            black_pawns &= black_pawns - 1;
         }
 
 
@@ -458,7 +481,7 @@ namespace BitFish {
 
     
     // Call at root, gets both eval and best move
-    std::pair<Move, int> get_best_move(Position& pos, int depth, Move pv) {
+    std::pair<Move, int> get_best_move(Position& pos, int depth, Move pv, int alpha, int beta) {
     
         Move best_move = NO_MOVE;
         int best_score = -INF;
@@ -486,7 +509,7 @@ namespace BitFish {
                 continue;
             }
 
-            int score = -minimax(pos, depth - 1, -INF, INF);
+            int score = -minimax(pos, depth - 1, -beta, -alpha);
 
             
 
@@ -497,12 +520,20 @@ namespace BitFish {
                 
             }
 
+
+
             if (search_info.stop.load(std::memory_order_relaxed)) return {NO_MOVE, 0};
 
             if (score > best_score) {
                 best_score = score;
                 best_move = move;
             }
+
+            if (score > alpha)
+                alpha = score;
+
+            if (alpha >= beta)
+                break;
 
         }
 
@@ -530,41 +561,52 @@ namespace BitFish {
 
         Move best_move = NO_MOVE;
         int eval = 0;
-        
-        int multiplier = current_pos.game_info.side_to_move == WHITE ? 1 : -1;
-
-        int local_nodes = 0;
+        int aspiration_window = 67;
 
         for (int depth = 1; depth <= depth_lim; ++depth) {
+            std::pair<Move, int> result;
+            if (depth == 1) {
+                result = get_best_move(current_pos, depth, best_move, -INF, INF);
+            }
+            else {
+                int alpha = eval - 67;
+                int beta  = eval + 67;
 
-            
-            if (!mate_found){
-                auto result = get_best_move(current_pos, depth, best_move);
-            
-                if (should_stop()) {
-                    break;
+                result = get_best_move(current_pos, depth, best_move, alpha, beta);
+
+                int score = result.second;
+
+                if (score <= alpha || score >= beta) {
+                    // fallback to full window
+                    result = get_best_move(current_pos, depth, best_move, -INF, INF);
                 }
+            }
 
+            if (result.first != NO_MOVE) {
                 eval = result.second;
                 best_move = result.first;
             }
-            
+
             
 
-            if (std::abs(eval) > MAX_CP) {
+            if (std::abs(eval) > MAX_CP)
                 mate_found = true;
-            }
 
-            auto elapsed = duration_cast<milliseconds> (steady_clock::now() - search_info.start_time).count();
+            auto elapsed = duration_cast<milliseconds>(
+                steady_clock::now() - search_info.start_time).count();
 
-            std::vector<Move> pv = {best_move};
+            std::vector<Move> pv = { best_move };
 
-            UCI::info_depth(depth, eval, search_info.nodes - local_nodes, elapsed, pv);
+            UCI::info_depth(depth,
+                            eval,
+                            search_info.nodes,
+                            elapsed,
+                            pv);
 
-            
-
-            
+            if (should_stop())
+                break;
         }
+
 
         
         std::cout << "bestmove " << move_to_string (best_move) << "\n";

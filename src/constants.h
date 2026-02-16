@@ -70,7 +70,7 @@ constexpr int MATE_EVAL = 30000;
 constexpr int INF = 30001;
 constexpr int MAX_CP = 10000;
 
-const std::string VERSION = "v0.5.1";
+const std::string VERSION = "v0.5.2";
 
 constexpr int KINGSIDE_CASTLING_BONUS = 8;
 constexpr int QUEENSIDE_CASTLING_BONUS = 6;
@@ -86,6 +86,19 @@ constexpr int MAX_QDEPTH = 20;
 constexpr int BISHOP_PAIR_BONUS = 30;
 
 constexpr int KING_SQUARE_CONTROLLED_BONUS = 5;
+
+constexpr int BISHOP_GAME_PHASE = 20;
+constexpr int KNIGHT_GAME_PHASE = 24;
+constexpr int ROOK_GAME_PHASE = 27;
+constexpr int QUEEN_GAME_PHASE = 38;
+
+constexpr int MAX_GAME_PHASE = 218;
+
+constexpr std::array<int, 8> passed_pawn_bonuses = {
+    0, 10, 15, 30, 50, 100, 150, 0
+};
+
+constexpr int ISOLATED_PAWN_PENALTY = 7;
 
 namespace EvalTables {
     constexpr std::array<int, BOARD_SIZE> pawn_table_mg = {

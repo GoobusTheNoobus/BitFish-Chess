@@ -44,6 +44,6 @@ namespace BitFish {
     // Search Functions
     int minimax (Position& pos, int depth, int alpha, int beta, bool null_ok=true);
     int qsearch (Position& pos, int depth, int alpha, int beta);
-    std::pair<Move, int> get_best_move (Position& pos, int max_depth, Move pv);
+    std::pair<Move, int> get_best_move (Position& pos, int depth, Move pv, int alpha=-INF, int beta=INF);
 
 } 

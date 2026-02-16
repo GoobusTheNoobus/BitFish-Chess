@@ -54,7 +54,7 @@ void UCI::info_depth (int depth, int eval, uint64_t nodes, uint64_t elapsed, con
     }
     else score_str = "cp " + std::to_string(eval);
 
-    std::cout << "info depth " << depth << " score " << score_str << " nodes " << (nodes) << " nps " << (nodes * 1000 / std::max(elapsed, 1ULL)) << " time " << elapsed << " pv ";
+    std::cout << "info depth " << depth << " score " << score_str << " nodes " << (nodes) << " nps " << (nodes * 1000 / std::max(elapsed, 1UL)) << " time " << elapsed << " pv ";
             
     for (Move move: pv) {
         std::cout << move_to_string(move) << " ";
