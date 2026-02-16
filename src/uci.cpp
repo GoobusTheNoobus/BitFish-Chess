@@ -12,8 +12,13 @@
 
 #include <sstream>
 #include <string>
+#include <thread>
+#include <atomic>
 
 namespace {
+    std::thread search_thread;
+    std::atomic<bool> is_searching{false};
+    
     Move parse_move (const Position& pos, const std::string& str) {
         MoveList list = MoveGen::generate_moves(pos);
 
@@ -24,12 +29,32 @@ namespace {
         }
 
         throw std::invalid_argument("Cannot parse string " + str);
-
+    }
+    
+    void cleanup_search_thread() {
+        if (search_thread.joinable()) {
+            search_thread.join();
+        }
+        is_searching = false;
     }
 }
 
 void UCI::info_depth (int depth, int eval, uint64_t nodes, uint64_t elapsed, const std::vector<Move>& pv) {
-    std::cout << "info depth " << depth << " score cp " << (eval) << " nodes " << (nodes) << " nps " << (nodes * 1000 / std::max(elapsed, 1ULL)) << " time " << elapsed << " pv ";
+    std::string score_str;
+
+    if (std::abs(eval) > MAX_CP){
+        int mate_distance = (MATE_EVAL - std::abs(eval) + 1) / 2;
+
+        if (eval < 0) {
+            mate_distance = -mate_distance;
+        }
+
+        score_str = "mate " + std::to_string(mate_distance);
+
+    }
+    else score_str = "cp " + std::to_string(eval);
+
+    std::cout << "info depth " << depth << " score " << score_str << " nodes " << (nodes) << " nps " << (nodes * 1000 / std::max(elapsed, 1ULL)) << " time " << elapsed << " pv ";
             
     for (Move move: pv) {
         std::cout << move_to_string(move) << " ";
@@ -53,6 +78,9 @@ void UCI::isready () {
 }
 
 void UCI::ucinewgame () {
+    // Wait for any ongoing search to finish
+    cleanup_search_thread();
+    
     BitFish::tt.clear();
     BitFish::reset_killers();
 }
@@ -61,8 +89,6 @@ void UCI::parse_position (const std::string& command) {
     std::istringstream iss (command);
 
     std::string token;
-
-    
 
     // position
     iss >> token;
@@ -99,12 +125,16 @@ void UCI::parse_position (const std::string& command) {
             }
         }
     }
-
-
-    
 }
 
 void UCI::parse_go(const std::string& command) {
+    // Stop any ongoing search first
+    if (is_searching) {
+        BitFish::stop();
+        
+    }
+    cleanup_search_thread();
+    
     std::istringstream iss (command);
     std::string token;
 
@@ -151,8 +181,21 @@ void UCI::parse_go(const std::string& command) {
         }
     }
 
-    BitFish::go(depth, time_limit);
+    // Launch search in separate thread
+    is_searching = true;
+    BitFish::search_info.stop.store(false, std::memory_order_relaxed);
     
+    search_thread = std::thread([depth, time_limit]() {
+        BitFish::go(depth, time_limit);
+        is_searching = false;
+    });
+}
+
+void UCI::stop() {
+    if (is_searching) {
+        BitFish::stop();
+        cleanup_search_thread();
+    }
 }
 
 void UCI::d () {
@@ -176,6 +219,8 @@ void UCI::loop () {
 
         if (command == "go") {
             parse_go (string);
+        } else if (command == "stop") {
+            stop();
         } else if (command == "position") {
             parse_position(string);
         } else if (command == "uci") {
@@ -189,6 +234,10 @@ void UCI::loop () {
         } else if (command == "eval") {
             eval();
         } else if (command == "quit") {
+            // Clean up before exiting
+            if (is_searching) {
+                stop();
+            }
             break;
         } 
         else {

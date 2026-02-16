@@ -545,7 +545,7 @@ namespace BitFish {
                     break;
                 }
 
-                eval = result.second * multiplier;
+                eval = result.second;
                 best_move = result.first;
             }
             

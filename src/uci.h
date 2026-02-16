@@ -29,4 +29,6 @@ namespace UCI {
     void eval();
 
     void loop();
+
+    void stop();
 }
