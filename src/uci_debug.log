@@ -1,0 +1,24 @@
+=== UCI Loop Started ===
+[] GUI >> go
+Checking if search is running...
+Parsing go command...
+Go command parsed, search started
+<< info depth 1 score cp 108 nodes 40 nps 40000 time 0 pv e2e4 
+<< info depth 2 score cp 30 nodes 171 nps 171000 time 0 pv e2e4 e7e5 
+<< info depth 3 score cp 102 nodes 1759 nps 879500 time 2 pv g1f3 d7d5 d2d4 
+<< info depth 4 score cp 30 nodes 4475 nps 1118750 time 4 pv g1f3 b8c6 d2d4 d7d5 
+<< info depth 5 score cp 80 nodes 13893 nps 1157750 time 12 pv g1f3 b8c6 e2e4 g8f6 b1c3 
+<< info depth 6 score cp 35 nodes 49572 nps 1126636 time 44 pv e2e4 e7e5 d2d4 g8f6 d4e5 f6e4 
+<< info depth 7 score cp 63 nodes 100288 nps 1055663 time 95 pv e2e4 d7d5 e4d5 d8d5 b1c3 d5e6 d1e2 
+<< info depth 8 score cp 30 nodes 314214 nps 1040443 time 302 pv e2e4 e7e5 g1f3 g8f6 f3e5 f6e4 d2d4 d7d5 
+<< info depth 9 score cp 53 nodes 892659 nps 1071619 time 833 pv e2e4 d7d5 e4d5 d8d5 b1c3 d5g2 f1g2 h7h5 g2b7 
+<< info depth 10 score cp 44 nodes 2853574 nps 1078040 time 2647 pv e2e4 e7e5 g1f3 g8f6 b1c3 b8c6 d2d3 f8b4 f3e5 c6e5 
+<< info depth 11 score cp 30 nodes 8351546 nps 1016869 time 8213 pv e2e4 e7e5 g1f3 g8f6 f3e5 d8e7 d2d4 d7d6 f1b5 c7c6 e5f7 
+<< info depth 12 score cp 28 nodes 21564813 nps 1037518 time 20785 pv d2d4 d7d5 g1f3 b8c6 b1c3 c8f5 f3g5 g8f6 g5f7 
+<< info depth 13 score cp 41 nodes 66502111 nps 1006540 time 66070 pv e2e4 f7f5 e4f5 b8c6 b1c3 g8f6 d2d4 c6d4 d1d4 d7d5 c3d5 
+<< info depth 14 score cp 35 nodes 162772865 nps 1077637 time 151046 pv e2e4 e7e5 g1f3 b8c6 b1c3 g8f6 d2d3 d7d5 e4d5 f6d5 c3d5 
+[] GUI >> stop
+Stop command received
+<< bestmove e2e4
+[] GUI >> quit
+=== UCI Loop Ended ===

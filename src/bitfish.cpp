@@ -304,8 +304,21 @@ namespace BitFish {
         HTEntry* entry = tt.probe(pos.hash);
         Move tt_move = NO_MOVE;
 
-        if (entry != nullptr) {
+        if (entry != nullptr && entry->depth >= depth) {
             tt_move = entry->best_move;
+
+            if (entry->flag == AT_LEAST) {
+                alpha = std::max(alpha, entry->score);
+            }
+
+            else if (entry->flag == AT_MOST) {
+                beta = std::min(beta, entry->score);
+            }
+
+            if (alpha >= beta) {
+                
+                return entry->score;
+            }
         }
 
         int ply_from_root = search_info.depth - depth;
@@ -591,6 +604,8 @@ namespace BitFish {
                     result = get_best_move(current_pos, depth, best_move, -INF, INF);
                 }
             }
+
+            if (search_info.stop) break;
 
             if (result.first != NO_MOVE) {
                 eval = result.second;
